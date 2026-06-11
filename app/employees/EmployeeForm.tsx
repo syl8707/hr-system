@@ -8,9 +8,9 @@ import {
 } from "@/app/generated/prisma/enums";
 
 const fieldClass =
-  "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-black focus:outline-none dark:border-zinc-700 dark:bg-zinc-900";
+  "mt-1.5 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
 const labelClass =
-  "block text-sm font-medium text-zinc-700 dark:text-zinc-300";
+  "block text-sm font-medium text-slate-700 dark:text-slate-300";
 
 function TextField({
   label,
@@ -57,7 +57,10 @@ export function EmployeeForm({
   cancelHref: string;
 }) {
   return (
-    <form action={action} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <form
+      action={action}
+      className="grid grid-cols-1 gap-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:grid-cols-2 dark:border-slate-800 dark:bg-slate-900"
+    >
       <TextField
         label="Employee ID"
         name="employeeId"
@@ -190,16 +193,16 @@ export function EmployeeForm({
         />
       </label>
 
-      <div className="sm:col-span-2 flex gap-3">
+      <div className="sm:col-span-2 mt-1 flex gap-3 border-t border-slate-200 pt-5 dark:border-slate-800">
         <button
           type="submit"
-          className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
         >
           {submitLabel}
         </button>
         <Link
           href={cancelHref}
-          className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
+          className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
         >
           Cancel
         </Link>

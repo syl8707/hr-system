@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/app/generated/prisma/client";
 import { EmployeeStatus } from "@/app/generated/prisma/enums";
 import { EmployeesFilters } from "./EmployeesFilters";
+import { StatusBadge } from "./StatusBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -91,13 +92,25 @@ export default async function EmployeesPage({
     return qs ? `/employees?${qs}` : "/employees";
   }
 
+  const navBtn =
+    "rounded-md border border-slate-300 bg-white px-3 py-1.5 font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800";
+  const navBtnDisabled =
+    "cursor-not-allowed rounded-md border border-slate-200 px-3 py-1.5 font-medium text-slate-300 dark:border-slate-800 dark:text-slate-600";
+
   return (
-    <main className="mx-auto w-full max-w-6xl px-6 py-10">
+    <main className="mx-auto w-full max-w-6xl px-8 py-10">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Employees</h1>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
+            Employees
+          </h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Manage your organization&rsquo;s people.
+          </p>
+        </div>
         <Link
           href="/employees/new"
-          className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
         >
           New employee
         </Link>
@@ -110,11 +123,14 @@ export default async function EmployeesPage({
       />
 
       {employees.length === 0 ? (
-        <p className="text-zinc-500">
+        <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center text-sm text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
           {total === 0 && !q && !department && !site && !status ? (
             <>
               No employees yet.{" "}
-              <Link href="/employees/new" className="underline">
+              <Link
+                href="/employees/new"
+                className="font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+              >
                 Add the first one
               </Link>
               .
@@ -122,124 +138,127 @@ export default async function EmployeesPage({
           ) : (
             "No employees match your filters."
           )}
-        </p>
+        </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
-          <table className="w-full border-collapse text-left text-sm">
-            <thead className="bg-zinc-50 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">
-              <tr>
-                <th className="px-4 py-3 font-medium">Employee ID</th>
-                <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Email</th>
-                <th className="px-4 py-3 font-medium">Department</th>
-                <th className="px-4 py-3 font-medium">Role</th>
-                <th className="px-4 py-3 font-medium">Site</th>
-                <th className="px-4 py-3 font-medium">Type</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Hire date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {employees.map((employee) => {
-                const href = `/employees/${employee.id}`;
-                // Each cell is a block-level link so the whole row is clickable
-                // while staying valid HTML (anchors can't wrap <tr>/<td>).
-                const cell = "block px-4 py-3";
-                return (
-                  <tr
-                    key={employee.id}
-                    className="border-t border-zinc-100 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
-                  >
-                    <td>
-                      <Link href={href} className={`${cell} font-mono text-xs`}>
-                        {employee.employeeId}
-                      </Link>
-                    </td>
-                    <td>
-                      <Link href={href} className={cell}>
-                        {employee.firstName} {employee.lastName}
-                        {employee.preferredName ? (
-                          <span className="text-zinc-500">
-                            {" "}
-                            ({employee.preferredName})
-                          </span>
-                        ) : null}
-                      </Link>
-                    </td>
-                    <td>
-                      <Link href={href} className={cell}>
-                        {employee.email ?? "—"}
-                      </Link>
-                    </td>
-                    <td>
-                      <Link href={href} className={cell}>
-                        {employee.department ?? "—"}
-                      </Link>
-                    </td>
-                    <td>
-                      <Link href={href} className={cell}>
-                        {employee.roleTitle ?? "—"}
-                      </Link>
-                    </td>
-                    <td>
-                      <Link href={href} className={cell}>
-                        {employee.site ?? "—"}
-                      </Link>
-                    </td>
-                    <td>
-                      <Link href={href} className={cell}>
-                        {employee.employmentType ?? "—"}
-                      </Link>
-                    </td>
-                    <td>
-                      <Link href={href} className={cell}>
-                        {employee.status}
-                      </Link>
-                    </td>
-                    <td>
-                      <Link href={href} className={cell}>
-                        {formatDate(employee.hireDate)}
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left text-sm">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Employee ID</th>
+                  <th className="px-4 py-3 font-medium">Name</th>
+                  <th className="px-4 py-3 font-medium">Email</th>
+                  <th className="px-4 py-3 font-medium">Department</th>
+                  <th className="px-4 py-3 font-medium">Role</th>
+                  <th className="px-4 py-3 font-medium">Site</th>
+                  <th className="px-4 py-3 font-medium">Type</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Hire date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {employees.map((employee) => {
+                  const href = `/employees/${employee.id}`;
+                  // Each cell is a block-level link so the whole row is clickable
+                  // while staying valid HTML (anchors can't wrap <tr>/<td>).
+                  const cell = "block px-4 py-3 text-slate-700 dark:text-slate-300";
+                  return (
+                    <tr
+                      key={employee.id}
+                      className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                    >
+                      <td>
+                        <Link
+                          href={href}
+                          className={`${cell} font-mono text-xs text-slate-500 dark:text-slate-400`}
+                        >
+                          {employee.employeeId}
+                        </Link>
+                      </td>
+                      <td>
+                        <Link
+                          href={href}
+                          className={`${cell} font-medium text-slate-900 dark:text-white`}
+                        >
+                          {employee.firstName} {employee.lastName}
+                          {employee.preferredName ? (
+                            <span className="font-normal text-slate-400">
+                              {" "}
+                              ({employee.preferredName})
+                            </span>
+                          ) : null}
+                        </Link>
+                      </td>
+                      <td>
+                        <Link href={href} className={cell}>
+                          {employee.email ?? "—"}
+                        </Link>
+                      </td>
+                      <td>
+                        <Link href={href} className={cell}>
+                          {employee.department ?? "—"}
+                        </Link>
+                      </td>
+                      <td>
+                        <Link href={href} className={cell}>
+                          {employee.roleTitle ?? "—"}
+                        </Link>
+                      </td>
+                      <td>
+                        <Link href={href} className={cell}>
+                          {employee.site ?? "—"}
+                        </Link>
+                      </td>
+                      <td>
+                        <Link href={href} className={cell}>
+                          {employee.employmentType ?? "—"}
+                        </Link>
+                      </td>
+                      <td>
+                        <Link href={href} className="block px-4 py-3">
+                          <StatusBadge status={employee.status} />
+                        </Link>
+                      </td>
+                      <td>
+                        <Link
+                          href={href}
+                          className={`${cell} tabular-nums`}
+                        >
+                          {formatDate(employee.hireDate)}
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {total > 0 ? (
-        <div className="mt-4 flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-400">
+        <div className="mt-4 flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
           <span>
-            {total.toLocaleString()}{" "}
+            <span className="font-medium text-slate-900 dark:text-white">
+              {total.toLocaleString()}
+            </span>{" "}
             {total === 1 ? "employee" : "employees"} · Page {currentPage} of{" "}
             {totalPages}
           </span>
           <div className="flex gap-2">
             {currentPage > 1 ? (
-              <Link
-                href={pageHref(currentPage - 1)}
-                className="rounded-md border border-zinc-300 px-3 py-1.5 font-medium hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
-              >
+              <Link href={pageHref(currentPage - 1)} className={navBtn}>
                 Previous
               </Link>
             ) : (
-              <span className="cursor-not-allowed rounded-md border border-zinc-200 px-3 py-1.5 font-medium text-zinc-400 dark:border-zinc-800 dark:text-zinc-600">
-                Previous
-              </span>
+              <span className={navBtnDisabled}>Previous</span>
             )}
             {currentPage < totalPages ? (
-              <Link
-                href={pageHref(currentPage + 1)}
-                className="rounded-md border border-zinc-300 px-3 py-1.5 font-medium hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
-              >
+              <Link href={pageHref(currentPage + 1)} className={navBtn}>
                 Next
               </Link>
             ) : (
-              <span className="cursor-not-allowed rounded-md border border-zinc-200 px-3 py-1.5 font-medium text-zinc-400 dark:border-zinc-800 dark:text-zinc-600">
-                Next
-              </span>
+              <span className={navBtnDisabled}>Next</span>
             )}
           </div>
         </div>

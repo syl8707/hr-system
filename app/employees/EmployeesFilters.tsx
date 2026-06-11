@@ -4,7 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 
 const controlClass =
-  "rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-black focus:outline-none dark:border-zinc-700 dark:bg-zinc-900";
+  "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
 
 export function EmployeesFilters({
   departments,
@@ -67,7 +67,7 @@ export function EmployeesFilters({
 
   return (
     <div
-      className={`mb-4 flex flex-wrap items-center gap-3 ${
+      className={`mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-opacity dark:border-slate-800 dark:bg-slate-900 ${
         isPending ? "opacity-70" : ""
       }`}
     >

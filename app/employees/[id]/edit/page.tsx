@@ -24,18 +24,16 @@ export default async function EditEmployeePage({
   const updateThisEmployee = updateEmployee.bind(null, employee.id);
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-6 py-10">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Edit {employee.firstName} {employee.lastName}
-        </h1>
-        <Link
-          href={`/employees/${employee.id}`}
-          className="text-sm text-zinc-500 underline"
-        >
-          Back to detail
-        </Link>
-      </div>
+    <main className="mx-auto w-full max-w-3xl px-8 py-10">
+      <Link
+        href={`/employees/${employee.id}`}
+        className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+      >
+        ← Back to detail
+      </Link>
+      <h1 className="mt-2 mb-6 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
+        Edit {employee.firstName} {employee.lastName}
+      </h1>
 
       <EmployeeForm
         action={updateThisEmployee}

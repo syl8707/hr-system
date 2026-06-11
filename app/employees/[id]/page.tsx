@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { deleteEmployee } from "../actions";
 import { DeleteEmployeeButton } from "../DeleteEmployeeButton";
+import { StatusBadge } from "../StatusBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -53,23 +54,33 @@ export default async function EmployeeDetailPage({
   const deleteThisEmployee = deleteEmployee.bind(null, employee.id);
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-6 py-10">
-      <div className="mb-6 flex items-center justify-between">
+    <main className="mx-auto w-full max-w-3xl px-8 py-10">
+      <Link
+        href="/employees"
+        className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+      >
+        ← Back to list
+      </Link>
+      <div className="mt-2 mb-6 flex items-start justify-between gap-4">
         <div>
-          <Link href="/employees" className="text-sm text-zinc-500 underline">
-            ← Back to list
-          </Link>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
             {employee.firstName} {employee.lastName}
             {employee.preferredName ? (
-              <span className="text-zinc-500"> ({employee.preferredName})</span>
+              <span className="font-normal text-slate-400">
+                {" "}
+                ({employee.preferredName})
+              </span>
             ) : null}
           </h1>
+          <div className="mt-2 flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
+            <span className="font-mono text-xs">{employee.employeeId}</span>
+            <StatusBadge status={employee.status} />
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <Link
             href={`/employees/${employee.id}/edit`}
-            className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
           >
             Edit
           </Link>
@@ -77,15 +88,21 @@ export default async function EmployeeDetailPage({
         </div>
       </div>
 
-      <dl className="divide-y divide-zinc-100 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+      <dl className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900">
         {fields.map((field) => (
           <div
             key={field.label}
-            className="grid grid-cols-3 gap-4 px-4 py-3 text-sm"
+            className="grid grid-cols-3 gap-4 px-5 py-3.5 text-sm"
           >
-            <dt className="font-medium text-zinc-500">{field.label}</dt>
-            <dd className="col-span-2 whitespace-pre-wrap">
-              {formatValue(field.value)}
+            <dt className="font-medium text-slate-500 dark:text-slate-400">
+              {field.label}
+            </dt>
+            <dd className="col-span-2 whitespace-pre-wrap text-slate-800 dark:text-slate-200">
+              {field.label === "Status" ? (
+                <StatusBadge status={employee.status} />
+              ) : (
+                formatValue(field.value)
+              )}
             </dd>
           </div>
         ))}
