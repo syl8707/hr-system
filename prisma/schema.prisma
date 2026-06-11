@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACTOR
+  SEASONAL
+}
+
+enum PayType {
+  HOURLY
+  SALARY
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  LEAVE_OF_ABSENCE
+  TERMINATED
+}
+
+model Employee {
+  id              String          @id @default(cuid())
+  employeeId      String          @unique
+  firstName       String
+  lastName        String
+  preferredName   String?
+  email           String?
+  phone           String?
+  department      String?
+  roleTitle       String?
+  roleFamily      String?
+  site            String?
+  manager         String?
+  employmentType  EmploymentType?
+  payType         PayType?
+  status          EmployeeStatus  @default(ACTIVE)
+  hireDate        DateTime?
+  terminationDate DateTime?
+  notes           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
