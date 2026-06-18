@@ -36,7 +36,7 @@ const nav = [
   },
 ];
 
-export function Sidebar() {
+export function Sidebar({ footer }: { footer?: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
@@ -71,6 +71,10 @@ export function Sidebar() {
           );
         })}
       </nav>
+
+      {/* Pushed to the bottom; renders the signed-in user + sign out, or
+          nothing when there is no session. */}
+      {footer ? <div className="mt-auto">{footer}</div> : null}
     </aside>
   );
 }

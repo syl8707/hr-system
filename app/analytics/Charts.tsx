@@ -212,9 +212,12 @@ export function WorkforceTrend({ data }: { data: TrendDatum[] }) {
       : [num.toLocaleString(), label];
   };
 
+  // Counts (bars) read against the left axis; percentages (lines) read against
+  // the right axis, pinned to a fixed 0–100% scale so a 95% retention line
+  // never gets rescaled to look like it's tracking the headcount counts.
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <ComposedChart data={data} margin={{ top: 4, right: 4, bottom: 4, left: -16 }}>
+      <ComposedChart data={data} margin={{ top: 8, right: 12, bottom: 4, left: 4 }}>
         <CartesianGrid vertical={false} stroke={GRID_STROKE} />
         <XAxis
           dataKey="year"
@@ -228,15 +231,28 @@ export function WorkforceTrend({ data }: { data: TrendDatum[] }) {
           allowDecimals={false}
           tickLine={false}
           axisLine={false}
+          label={{
+            value: "People",
+            angle: -90,
+            position: "insideLeft",
+            style: { fontSize: 11, fill: "#94a3b8" },
+          }}
         />
         <YAxis
           yAxisId="pct"
           orientation="right"
-          domain={[0, "auto"]}
+          domain={[0, 100]}
+          ticks={[0, 25, 50, 75, 100]}
           tick={AXIS_TICK}
           tickFormatter={(value: number) => `${value}%`}
           tickLine={false}
           axisLine={false}
+          label={{
+            value: "Rate",
+            angle: 90,
+            position: "insideRight",
+            style: { fontSize: 11, fill: "#94a3b8" },
+          }}
         />
         <Tooltip
           cursor={{ fill: "rgba(99,102,241,0.08)" }}
@@ -244,22 +260,32 @@ export function WorkforceTrend({ data }: { data: TrendDatum[] }) {
           formatter={trendFormatter}
         />
         <Legend iconType="circle" wrapperStyle={{ fontSize: 12, color: "#64748b" }} />
-        <Bar yAxisId="count" dataKey="hires" name="Hires" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+        {/* Counts: solid bars in cool tones (left axis). */}
+        <Bar
+          yAxisId="count"
+          dataKey="hires"
+          name="Hires (count)"
+          fill="#4f46e5"
+          radius={[4, 4, 0, 0]}
+        />
         <Bar
           yAxisId="count"
           dataKey="terminations"
-          name="Terminations"
-          fill="#f43f5e"
+          name="Terminations (count)"
+          fill="#0ea5e9"
           radius={[4, 4, 0, 0]}
         />
+        {/* Rates: bold lines in warm/green tones (right axis). White-ringed dots
+            keep the markers legible where they cross the bars. */}
         <Line
           yAxisId="pct"
           type="monotone"
           dataKey="turnover"
           name="Turnover %"
-          stroke="#d97706"
-          strokeWidth={2}
-          dot={{ r: 2 }}
+          stroke="#f59e0b"
+          strokeWidth={2.5}
+          dot={{ r: 3, fill: "#f59e0b", stroke: "#ffffff", strokeWidth: 1 }}
+          activeDot={{ r: 5 }}
           connectNulls
         />
         <Line
@@ -267,9 +293,10 @@ export function WorkforceTrend({ data }: { data: TrendDatum[] }) {
           type="monotone"
           dataKey="retention"
           name="Retention %"
-          stroke="#16a34a"
-          strokeWidth={2}
-          dot={{ r: 2 }}
+          stroke="#10b981"
+          strokeWidth={2.5}
+          dot={{ r: 3, fill: "#10b981", stroke: "#ffffff", strokeWidth: 1 }}
+          activeDot={{ r: 5 }}
           connectNulls
         />
       </ComposedChart>

@@ -4,13 +4,29 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { deleteEmployee } from "../actions";
 import { DeleteEmployeeButton } from "../DeleteEmployeeButton";
+import { EmployeeHistory } from "../EmployeeHistory";
 import { StatusBadge } from "../StatusBadge";
 
 export const dynamic = "force-dynamic";
 
+// Readable date ("Jun 16, 2026") and date+time ("Jun 16, 2026, 2:30 PM")
+// formatters, used instead of raw ISO strings.
+const DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+const DATE_TIME_FORMAT = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+});
+
 function formatValue(value: unknown): string {
   if (value === null || value === undefined || value === "") return "—";
-  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  if (value instanceof Date) return DATE_FORMAT.format(value);
   return String(value);
 }
 
@@ -21,7 +37,13 @@ export default async function EmployeeDetailPage({
 }) {
   const { id } = await params;
 
-  const employee = await prisma.employee.findUnique({ where: { id } });
+  const [employee, changeLogs] = await Promise.all([
+    prisma.employee.findUnique({ where: { id } }),
+    prisma.employeeChangeLog.findMany({
+      where: { employeeId: id },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
 
   if (!employee) {
     notFound();
@@ -45,8 +67,6 @@ export default async function EmployeeDetailPage({
     { label: "Hire date", value: employee.hireDate },
     { label: "Termination date", value: employee.terminationDate },
     { label: "Notes", value: employee.notes },
-    { label: "Created", value: employee.createdAt },
-    { label: "Updated", value: employee.updatedAt },
   ];
 
   // Pre-bind the server action to this employee's id so the delete button
@@ -107,6 +127,13 @@ export default async function EmployeeDetailPage({
           </div>
         ))}
       </dl>
+
+      <div className="mt-4 flex flex-col gap-1 px-1 text-xs text-slate-500 sm:flex-row sm:justify-between dark:text-slate-400">
+        <span>Last updated: {DATE_TIME_FORMAT.format(employee.updatedAt)}</span>
+        <span>Created: {DATE_TIME_FORMAT.format(employee.createdAt)}</span>
+      </div>
+
+      <EmployeeHistory logs={changeLogs} />
     </main>
   );
 }

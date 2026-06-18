@@ -10,8 +10,14 @@ export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 25;
 
+const DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+
 function formatDate(date: Date | null) {
-  return date ? date.toISOString().slice(0, 10) : "—";
+  return date ? DATE_FORMAT.format(date) : "—";
 }
 
 // searchParams values are string | string[] | undefined; normalize to a single string.
@@ -154,6 +160,7 @@ export default async function EmployeesPage({
                   <th className="px-4 py-3 font-medium">Type</th>
                   <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 font-medium">Hire date</th>
+                  <th className="px-4 py-3 font-medium">Updated</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -225,6 +232,14 @@ export default async function EmployeesPage({
                           className={`${cell} tabular-nums`}
                         >
                           {formatDate(employee.hireDate)}
+                        </Link>
+                      </td>
+                      <td>
+                        <Link
+                          href={href}
+                          className={`${cell} tabular-nums text-slate-500 dark:text-slate-400`}
+                        >
+                          {formatDate(employee.updatedAt)}
                         </Link>
                       </td>
                     </tr>

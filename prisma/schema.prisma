@@ -30,9 +30,15 @@ enum EmployeeStatus {
   TERMINATED
 }
 
+enum ChangeAction {
+  CREATE
+  UPDATE
+  DELETE
+}
+
 model Employee {
   id              String          @id @default(cuid())
-  employeeId      String          @unique
+  employeeId      String?         @unique
   firstName       String
   lastName        String
   preferredName   String?
@@ -51,4 +57,21 @@ model Employee {
   notes           String?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+}
+
+// Append-only audit trail of every create/update/delete on an Employee.
+// `employeeId` deliberately has no relation/foreign key to Employee so that
+// deleting an employee never cascades into (or blocks) removing their history.
+model EmployeeChangeLog {
+  id         String       @id @default(cuid())
+  employeeId String
+  action     ChangeAction
+  // CREATE: the initial field values. UPDATE: only changed fields as
+  // { field: { from, to } }. DELETE: a marker.
+  changes    Json
+  // Nullable for now; populated with the signed-in user once auth lands.
+  changedBy  String?
+  createdAt  DateTime     @default(now())
+
+  @@index([employeeId, createdAt])
 }

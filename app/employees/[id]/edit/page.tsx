@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { EmployeeForm } from "../../EmployeeForm";
 import { updateEmployee } from "../../actions";
+import { getEmployeeFieldOptions } from "../../options";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,10 @@ export default async function EditEmployeePage({
 }) {
   const { id } = await params;
 
-  const employee = await prisma.employee.findUnique({ where: { id } });
+  const [employee, fieldOptions] = await Promise.all([
+    prisma.employee.findUnique({ where: { id } }),
+    getEmployeeFieldOptions(),
+  ]);
 
   if (!employee) {
     notFound();
@@ -40,6 +44,7 @@ export default async function EditEmployeePage({
         employee={employee}
         submitLabel="Save changes"
         cancelHref={`/employees/${employee.id}`}
+        fieldOptions={fieldOptions}
       />
     </main>
   );

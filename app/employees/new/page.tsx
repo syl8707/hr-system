@@ -2,8 +2,13 @@ import Link from "next/link";
 
 import { EmployeeForm } from "../EmployeeForm";
 import { createEmployee } from "../actions";
+import { getEmployeeFieldOptions } from "../options";
 
-export default function NewEmployeePage() {
+export const dynamic = "force-dynamic";
+
+export default async function NewEmployeePage() {
+  const fieldOptions = await getEmployeeFieldOptions();
+
   return (
     <main className="mx-auto w-full max-w-3xl px-8 py-10">
       <Link
@@ -20,6 +25,7 @@ export default function NewEmployeePage() {
         action={createEmployee}
         submitLabel="Create employee"
         cancelHref="/employees"
+        fieldOptions={fieldOptions}
       />
     </main>
   );
