@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@/app/generated/prisma/client";
 import { EmployeeStatus } from "@/app/generated/prisma/enums";
+import { buildEmployeeWhere } from "./query";
 import { EmployeesFilters } from "./EmployeesFilters";
 import { StatusBadge } from "./StatusBadge";
 
@@ -38,20 +38,9 @@ export default async function EmployeesPage({
   const requestedPage = Number.parseInt(first(sp.page), 10);
   const page = Number.isNaN(requestedPage) || requestedPage < 1 ? 1 : requestedPage;
 
-  // Build the filter once; reused for both the count and the page query.
-  const where: Prisma.EmployeeWhereInput = {};
-  if (q) {
-    where.OR = [
-      { firstName: { contains: q, mode: "insensitive" } },
-      { lastName: { contains: q, mode: "insensitive" } },
-      { employeeId: { contains: q, mode: "insensitive" } },
-    ];
-  }
-  if (department) where.department = department;
-  if (site) where.site = site;
-  if (status && status in EmployeeStatus) {
-    where.status = status as EmployeeStatus;
-  }
+  // Build the filter once; reused for both the count and the page query, and
+  // for the export route so a download honors the same filters.
+  const where = buildEmployeeWhere({ q, department, site, status });
 
   const [total, departmentRows, siteRows] = await Promise.all([
     prisma.employee.count({ where }),
@@ -98,6 +87,18 @@ export default async function EmployeesPage({
     return qs ? `/employees?${qs}` : "/employees";
   }
 
+  // The export download carries the active filters (not pagination) so users
+  // get exactly the set they're looking at.
+  const exportParams = new URLSearchParams();
+  if (q) exportParams.set("q", q);
+  if (department) exportParams.set("department", department);
+  if (site) exportParams.set("site", site);
+  if (status) exportParams.set("status", status);
+  const exportQs = exportParams.toString();
+  const exportHref = exportQs
+    ? `/employees/export?${exportQs}`
+    : "/employees/export";
+
   const navBtn =
     "rounded-md border border-slate-300 bg-white px-3 py-1.5 font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800";
   const navBtnDisabled =
@@ -114,12 +115,26 @@ export default async function EmployeesPage({
             Manage your organization&rsquo;s people.
           </p>
         </div>
-        <Link
-          href="/employees/new"
-          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
-        >
-          New employee
-        </Link>
+        <div className="flex items-center gap-2">
+          <a
+            href={exportHref}
+            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            Export
+          </a>
+          <Link
+            href="/employees/import"
+            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            Import
+          </Link>
+          <Link
+            href="/employees/new"
+            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+          >
+            New employee
+          </Link>
+        </div>
       </div>
 
       <EmployeesFilters

@@ -9,7 +9,7 @@ import {
   PayType,
   EmployeeStatus,
 } from "@/app/generated/prisma/enums";
-import type { EmployeeFormState } from "./actions";
+import type { EmployeeFormState } from "./validation";
 import type { EmployeeFieldOptions } from "./options";
 
 const fieldClass =
