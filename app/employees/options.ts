@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 // The free-text columns we surface as "pick an existing value or add a new one"
 // dropdowns on the employee form.
 export type EmployeeFieldOptions = {
+  company: string[];
   department: string[];
   site: string[];
   roleTitle: string[];
@@ -28,6 +29,7 @@ function distinct(values: (string | null)[]): string[] {
 export async function getEmployeeFieldOptions(): Promise<EmployeeFieldOptions> {
   const rows = await prisma.employee.findMany({
     select: {
+      company: true,
       department: true,
       site: true,
       roleTitle: true,
@@ -37,6 +39,7 @@ export async function getEmployeeFieldOptions(): Promise<EmployeeFieldOptions> {
   });
 
   return {
+    company: distinct(rows.map((r) => r.company)),
     department: distinct(rows.map((r) => r.department)),
     site: distinct(rows.map((r) => r.site)),
     roleTitle: distinct(rows.map((r) => r.roleTitle)),

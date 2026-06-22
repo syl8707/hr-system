@@ -199,6 +199,12 @@ export function EmployeeForm({
         defaultValue={employee?.phone ?? ""}
       />
       <SelectOrAddField
+        label="Company"
+        name="company"
+        options={fieldOptions.company}
+        defaultValue={employee?.company ?? ""}
+      />
+      <SelectOrAddField
         label="Department"
         name="department"
         options={fieldOptions.department}

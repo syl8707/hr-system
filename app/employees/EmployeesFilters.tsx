@@ -7,10 +7,12 @@ const controlClass =
   "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
 
 export function EmployeesFilters({
+  companies,
   departments,
   sites,
   statuses,
 }: {
+  companies: string[];
   departments: string[];
   sites: string[];
   statuses: string[];
@@ -79,6 +81,20 @@ export function EmployeesFilters({
         aria-label="Search employees"
         className={`${controlClass} min-w-64 flex-1`}
       />
+
+      <select
+        value={searchParams.get("company") ?? ""}
+        onChange={(event) => onSelect("company", event.target.value)}
+        aria-label="Filter by company"
+        className={controlClass}
+      >
+        <option value="">All companies</option>
+        {companies.map((value) => (
+          <option key={value} value={value}>
+            {value}
+          </option>
+        ))}
+      </select>
 
       <select
         value={searchParams.get("department") ?? ""}

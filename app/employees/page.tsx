@@ -32,6 +32,7 @@ export default async function EmployeesPage({
 }) {
   const sp = await searchParams;
   const q = first(sp.q).trim();
+  const company = first(sp.company);
   const department = first(sp.department);
   const site = first(sp.site);
   const status = first(sp.status);
@@ -40,10 +41,16 @@ export default async function EmployeesPage({
 
   // Build the filter once; reused for both the count and the page query, and
   // for the export route so a download honors the same filters.
-  const where = buildEmployeeWhere({ q, department, site, status });
+  const where = buildEmployeeWhere({ q, company, department, site, status });
 
-  const [total, departmentRows, siteRows] = await Promise.all([
+  const [total, companyRows, departmentRows, siteRows] = await Promise.all([
     prisma.employee.count({ where }),
+    prisma.employee.findMany({
+      where: { company: { not: null } },
+      select: { company: true },
+      distinct: ["company"],
+      orderBy: { company: "asc" },
+    }),
     prisma.employee.findMany({
       where: { department: { not: null } },
       select: { department: true },
@@ -68,6 +75,9 @@ export default async function EmployeesPage({
     take: PAGE_SIZE,
   });
 
+  const companies = companyRows
+    .map((row) => row.company)
+    .filter((value): value is string => value !== null);
   const departments = departmentRows
     .map((row) => row.department)
     .filter((value): value is string => value !== null);
@@ -79,6 +89,7 @@ export default async function EmployeesPage({
   function pageHref(targetPage: number) {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
+    if (company) params.set("company", company);
     if (department) params.set("department", department);
     if (site) params.set("site", site);
     if (status) params.set("status", status);
@@ -91,6 +102,7 @@ export default async function EmployeesPage({
   // get exactly the set they're looking at.
   const exportParams = new URLSearchParams();
   if (q) exportParams.set("q", q);
+  if (company) exportParams.set("company", company);
   if (department) exportParams.set("department", department);
   if (site) exportParams.set("site", site);
   if (status) exportParams.set("status", status);
@@ -138,6 +150,7 @@ export default async function EmployeesPage({
       </div>
 
       <EmployeesFilters
+        companies={companies}
         departments={departments}
         sites={sites}
         statuses={Object.values(EmployeeStatus)}
@@ -145,7 +158,7 @@ export default async function EmployeesPage({
 
       {employees.length === 0 ? (
         <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center text-sm text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
-          {total === 0 && !q && !department && !site && !status ? (
+          {total === 0 && !q && !company && !department && !site && !status ? (
             <>
               No employees yet.{" "}
               <Link
@@ -169,6 +182,7 @@ export default async function EmployeesPage({
                   <th className="px-4 py-3 font-medium">Employee ID</th>
                   <th className="px-4 py-3 font-medium">Name</th>
                   <th className="px-4 py-3 font-medium">Email</th>
+                  <th className="px-4 py-3 font-medium">Company</th>
                   <th className="px-4 py-3 font-medium">Department</th>
                   <th className="px-4 py-3 font-medium">Role</th>
                   <th className="px-4 py-3 font-medium">Site</th>
@@ -214,6 +228,11 @@ export default async function EmployeesPage({
                       <td>
                         <Link href={href} className={cell}>
                           {employee.email ?? "—"}
+                        </Link>
+                      </td>
+                      <td>
+                        <Link href={href} className={cell}>
+                          {employee.company ?? "—"}
                         </Link>
                       </td>
                       <td>

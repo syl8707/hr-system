@@ -8,6 +8,7 @@ export function firstParam(value: string | string[] | undefined): string {
 
 export type EmployeeFilters = {
   q?: string;
+  company?: string;
   department?: string;
   site?: string;
   status?: string;
@@ -28,6 +29,7 @@ export function buildEmployeeWhere(
       { employeeId: { contains: q, mode: "insensitive" } },
     ];
   }
+  if (filters.company) where.company = filters.company;
   if (filters.department) where.department = filters.department;
   if (filters.site) where.site = filters.site;
   if (filters.status && filters.status in EmployeeStatus) {

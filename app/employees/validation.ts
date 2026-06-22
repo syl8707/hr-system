@@ -43,6 +43,7 @@ export type EmployeeColumn =
   | "preferredName"
   | "email"
   | "phone"
+  | "company"
   | "department"
   | "roleTitle"
   | "roleFamily"
@@ -177,6 +178,7 @@ function buildData(
     email: normalized.email,
     preferredName: sourceString(source, "preferredName"),
     phone: normalized.phone,
+    company: sourceString(source, "company"),
     department: sourceString(source, "department"),
     roleTitle: sourceString(source, "roleTitle"),
     roleFamily: sourceString(source, "roleFamily"),
@@ -212,6 +214,7 @@ export const EMPLOYEE_FIELDS: readonly EmployeeColumn[] = [
   "preferredName",
   "email",
   "phone",
+  "company",
   "department",
   "roleTitle",
   "roleFamily",
@@ -235,6 +238,7 @@ export const EMPLOYEE_COLUMNS: readonly EmployeeColumn[] = [
   "preferredName",
   "email",
   "phone",
+  "company",
   "department",
   "site",
   "roleTitle",
@@ -261,6 +265,7 @@ export const FIELD_LABELS: Record<EmployeeColumn, string> = {
   preferredName: "Preferred name",
   email: "Email",
   phone: "Phone",
+  company: "Company",
   department: "Department",
   site: "Site",
   roleTitle: "Role title",
@@ -361,6 +366,7 @@ const HEADER_ALIASES: Record<EmployeeColumn, string[]> = {
   preferredName: ["preferredname", "preferred", "nickname", "goesby", "knownas", "displayname"],
   email: ["email", "emailaddress", "mail", "workemail", "emailid"],
   phone: ["phone", "phonenumber", "mobile", "cell", "cellphone", "telephone", "tel", "contactnumber"],
+  company: ["company", "companyname", "employer", "legalentity", "entity", "organization", "organisation", "businessunit"],
   department: ["department", "dept", "team", "division", "org", "orgunit"],
   site: ["site", "location", "office", "worksite", "facility", "branch"],
   roleTitle: ["roletitle", "title", "jobtitle", "role", "position", "jobrole"],

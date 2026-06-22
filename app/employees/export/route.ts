@@ -21,6 +21,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const where = buildEmployeeWhere({
     q: searchParams.get("q") ?? undefined,
+    company: searchParams.get("company") ?? undefined,
     department: searchParams.get("department") ?? undefined,
     site: searchParams.get("site") ?? undefined,
     status: searchParams.get("status") ?? undefined,

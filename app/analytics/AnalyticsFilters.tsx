@@ -7,9 +7,11 @@ const controlClass =
   "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
 
 export function AnalyticsFilters({
+  companies,
   departments,
   sites,
 }: {
+  companies: string[];
   departments: string[];
   sites: string[];
 }) {
@@ -28,9 +30,10 @@ export function AnalyticsFilters({
     });
   }
 
+  const company = searchParams.get("company") ?? "";
   const department = searchParams.get("department") ?? "";
   const site = searchParams.get("site") ?? "";
-  const hasFilters = department !== "" || site !== "";
+  const hasFilters = company !== "" || department !== "" || site !== "";
 
   return (
     <div
@@ -41,6 +44,20 @@ export function AnalyticsFilters({
       <span className="px-1 text-sm font-medium text-slate-500 dark:text-slate-400">
         Filter
       </span>
+
+      <select
+        value={company}
+        onChange={(event) => onSelect("company", event.target.value)}
+        aria-label="Filter by company"
+        className={controlClass}
+      >
+        <option value="">All companies</option>
+        {companies.map((value) => (
+          <option key={value} value={value}>
+            {value}
+          </option>
+        ))}
+      </select>
 
       <select
         value={department}

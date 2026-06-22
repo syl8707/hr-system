@@ -56,6 +56,7 @@ export default async function EmployeeDetailPage({
     { label: "Preferred name", value: employee.preferredName },
     { label: "Email", value: employee.email },
     { label: "Phone", value: employee.phone },
+    { label: "Company", value: employee.company },
     { label: "Department", value: employee.department },
     { label: "Role title", value: employee.roleTitle },
     { label: "Role family", value: employee.roleFamily },

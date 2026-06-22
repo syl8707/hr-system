@@ -174,25 +174,30 @@ export default async function AnalyticsPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const sp = await searchParams;
+  const company = first(sp.company);
   const department = first(sp.department);
   const site = first(sp.site);
 
   // The slice that every metric and chart below is computed over.
   const where: Prisma.EmployeeWhereInput = {};
+  if (company) where.company = company;
   if (department) where.department = department;
   if (site) where.site = site;
 
   const [
     statusGroups,
+    companyGroups,
     departmentGroups,
     siteGroups,
     typeGroups,
     activeHireDates,
     employeeDates,
+    companyRows,
     departmentRows,
     siteRows,
   ] = await Promise.all([
     prisma.employee.groupBy({ by: ["status"], where, _count: { _all: true } }),
+    prisma.employee.groupBy({ by: ["company"], where, _count: { _all: true } }),
     prisma.employee.groupBy({ by: ["department"], where, _count: { _all: true } }),
     prisma.employee.groupBy({ by: ["site"], where, _count: { _all: true } }),
     prisma.employee.groupBy({ by: ["employmentType"], where, _count: { _all: true } }),
@@ -208,6 +213,12 @@ export default async function AnalyticsPage({
       select: { hireDate: true, terminationDate: true },
     }),
     // Full (unfiltered) option lists so the filter selects can always switch.
+    prisma.employee.findMany({
+      where: { company: { not: null } },
+      select: { company: true },
+      distinct: ["company"],
+      orderBy: { company: "asc" },
+    }),
     prisma.employee.findMany({
       where: { department: { not: null } },
       select: { department: true },
@@ -231,6 +242,9 @@ export default async function AnalyticsPage({
   const total = statusGroups.reduce((sum, row) => sum + row._count._all, 0);
 
   // --- Distribution charts ---------------------------------------------------
+  const companyData = toCategoryData(
+    companyGroups.map((row) => ({ key: row.company, count: row._count._all })),
+  );
   const departmentData = toCategoryData(
     departmentGroups.map((row) => ({ key: row.department, count: row._count._all })),
   );
@@ -261,6 +275,9 @@ export default async function AnalyticsPage({
   // --- Hires, terminations, turnover & retention per year --------------------
   const trendData = computeWorkforceTrend(employeeDates);
 
+  const companies = companyRows
+    .map((row) => row.company)
+    .filter((value): value is string => value !== null);
   const departments = departmentRows
     .map((row) => row.department)
     .filter((value): value is string => value !== null);
@@ -269,6 +286,7 @@ export default async function AnalyticsPage({
     .filter((value): value is string => value !== null);
 
   const sliceLabel = [
+    company ? `${company}` : null,
     department ? `${department}` : null,
     site ? `${site}` : null,
   ]
@@ -286,7 +304,11 @@ export default async function AnalyticsPage({
         </p>
       </div>
 
-      <AnalyticsFilters departments={departments} sites={sites} />
+      <AnalyticsFilters
+        companies={companies}
+        departments={departments}
+        sites={sites}
+      />
 
       {/* Summary metric cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -298,6 +320,9 @@ export default async function AnalyticsPage({
 
       {/* Distribution charts */}
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <ChartCard title="Headcount by company" subtitle="Share of total headcount">
+          <CategoryBar data={companyData} total={total} horizontal />
+        </ChartCard>
         <ChartCard title="Headcount by department" subtitle="Share of total headcount">
           <CategoryBar data={departmentData} total={total} horizontal />
         </ChartCard>
