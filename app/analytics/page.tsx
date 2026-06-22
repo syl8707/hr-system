@@ -177,12 +177,14 @@ export default async function AnalyticsPage({
   const company = first(sp.company);
   const department = first(sp.department);
   const site = first(sp.site);
+  const role = first(sp.role);
 
   // The slice that every metric and chart below is computed over.
   const where: Prisma.EmployeeWhereInput = {};
   if (company) where.company = company;
   if (department) where.department = department;
   if (site) where.site = site;
+  if (role) where.roleTitle = role;
 
   const [
     statusGroups,
@@ -195,6 +197,7 @@ export default async function AnalyticsPage({
     companyRows,
     departmentRows,
     siteRows,
+    roleRows,
   ] = await Promise.all([
     prisma.employee.groupBy({ by: ["status"], where, _count: { _all: true } }),
     prisma.employee.groupBy({ by: ["company"], where, _count: { _all: true } }),
@@ -230,6 +233,12 @@ export default async function AnalyticsPage({
       select: { site: true },
       distinct: ["site"],
       orderBy: { site: "asc" },
+    }),
+    prisma.employee.findMany({
+      where: { roleTitle: { not: null } },
+      select: { roleTitle: true },
+      distinct: ["roleTitle"],
+      orderBy: { roleTitle: "asc" },
     }),
   ]);
 
@@ -284,11 +293,15 @@ export default async function AnalyticsPage({
   const sites = siteRows
     .map((row) => row.site)
     .filter((value): value is string => value !== null);
+  const roles = roleRows
+    .map((row) => row.roleTitle)
+    .filter((value): value is string => value !== null);
 
   const sliceLabel = [
     company ? `${company}` : null,
     department ? `${department}` : null,
     site ? `${site}` : null,
+    role ? `${role}` : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -308,6 +321,7 @@ export default async function AnalyticsPage({
         companies={companies}
         departments={departments}
         sites={sites}
+        roles={roles}
       />
 
       {/* Summary metric cards */}

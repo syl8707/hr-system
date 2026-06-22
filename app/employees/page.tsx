@@ -2,7 +2,8 @@ import Link from "next/link";
 
 import { prisma } from "@/lib/prisma";
 import { EmployeeStatus } from "@/app/generated/prisma/enums";
-import { buildEmployeeWhere } from "./query";
+import { buildEmployeeOrderBy, buildEmployeeWhere } from "./query";
+import { SITE_OPTIONS } from "./siteOptions";
 import { EmployeesFilters } from "./EmployeesFilters";
 import { StatusBadge } from "./StatusBadge";
 
@@ -18,6 +19,36 @@ const DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
 
 function formatDate(date: Date | null) {
   return date ? DATE_FORMAT.format(date) : "—";
+}
+
+// Tenure from hireDate to an end date: the termination date for terminated
+// employees, otherwise today. Keeps the figure correct for both current and
+// former staff. Rendered as "3 yr 4 mo", "5 mo", or "less than a month"; "—"
+// when there's no hire date.
+function formatDuration(
+  hireDate: Date | null,
+  terminationDate: Date | null,
+  status: EmployeeStatus,
+): string {
+  if (!hireDate) return "—";
+  const end =
+    status === EmployeeStatus.TERMINATED && terminationDate
+      ? terminationDate
+      : new Date();
+
+  let months =
+    (end.getFullYear() - hireDate.getFullYear()) * 12 +
+    (end.getMonth() - hireDate.getMonth());
+  if (end.getDate() < hireDate.getDate()) months -= 1;
+
+  if (months < 1) return "less than a month";
+
+  const years = Math.floor(months / 12);
+  const remMonths = months % 12;
+  const parts: string[] = [];
+  if (years > 0) parts.push(`${years} yr`);
+  if (remMonths > 0) parts.push(`${remMonths} mo`);
+  return parts.join(" ");
 }
 
 // searchParams values are string | string[] | undefined; normalize to a single string.
@@ -36,6 +67,7 @@ export default async function EmployeesPage({
   const department = first(sp.department);
   const site = first(sp.site);
   const status = first(sp.status);
+  const sort = first(sp.sort);
   const requestedPage = Number.parseInt(first(sp.page), 10);
   const page = Number.isNaN(requestedPage) || requestedPage < 1 ? 1 : requestedPage;
 
@@ -70,7 +102,7 @@ export default async function EmployeesPage({
 
   const employees = await prisma.employee.findMany({
     where,
-    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    orderBy: buildEmployeeOrderBy(sort),
     skip: (currentPage - 1) * PAGE_SIZE,
     take: PAGE_SIZE,
   });
@@ -81,9 +113,16 @@ export default async function EmployeesPage({
   const departments = departmentRows
     .map((row) => row.department)
     .filter((value): value is string => value !== null);
-  const sites = siteRows
-    .map((row) => row.site)
-    .filter((value): value is string => value !== null);
+  // Union the canonical site list with distinct DB values so the predefined
+  // sites always appear in the filter, even when unassigned to any employee.
+  const sites = [
+    ...new Set([
+      ...SITE_OPTIONS,
+      ...siteRows
+        .map((row) => row.site)
+        .filter((value): value is string => value !== null),
+    ]),
+  ].sort((a, b) => a.localeCompare(b));
 
   // Preserve the active filters when building pagination links.
   function pageHref(targetPage: number) {
@@ -93,6 +132,7 @@ export default async function EmployeesPage({
     if (department) params.set("department", department);
     if (site) params.set("site", site);
     if (status) params.set("status", status);
+    if (sort) params.set("sort", sort);
     if (targetPage > 1) params.set("page", String(targetPage));
     const qs = params.toString();
     return qs ? `/employees?${qs}` : "/employees";
@@ -189,6 +229,7 @@ export default async function EmployeesPage({
                   <th className="px-4 py-3 font-medium">Type</th>
                   <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 font-medium">Hire date</th>
+                  <th className="px-4 py-3 font-medium">Duration</th>
                   <th className="px-4 py-3 font-medium">Updated</th>
                 </tr>
               </thead>
@@ -266,6 +307,18 @@ export default async function EmployeesPage({
                           className={`${cell} tabular-nums`}
                         >
                           {formatDate(employee.hireDate)}
+                        </Link>
+                      </td>
+                      <td>
+                        <Link
+                          href={href}
+                          className={`${cell} tabular-nums`}
+                        >
+                          {formatDuration(
+                            employee.hireDate,
+                            employee.terminationDate,
+                            employee.status,
+                          )}
                         </Link>
                       </td>
                       <td>

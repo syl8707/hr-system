@@ -10,10 +10,12 @@ export function AnalyticsFilters({
   companies,
   departments,
   sites,
+  roles,
 }: {
   companies: string[];
   departments: string[];
   sites: string[];
+  roles: string[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -33,7 +35,9 @@ export function AnalyticsFilters({
   const company = searchParams.get("company") ?? "";
   const department = searchParams.get("department") ?? "";
   const site = searchParams.get("site") ?? "";
-  const hasFilters = company !== "" || department !== "" || site !== "";
+  const role = searchParams.get("role") ?? "";
+  const hasFilters =
+    company !== "" || department !== "" || site !== "" || role !== "";
 
   return (
     <div
@@ -81,6 +85,20 @@ export function AnalyticsFilters({
       >
         <option value="">All sites</option>
         {sites.map((value) => (
+          <option key={value} value={value}>
+            {value}
+          </option>
+        ))}
+      </select>
+
+      <select
+        value={role}
+        onChange={(event) => onSelect("role", event.target.value)}
+        aria-label="Filter by role"
+        className={controlClass}
+      >
+        <option value="">All roles</option>
+        {roles.map((value) => (
           <option key={value} value={value}>
             {value}
           </option>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 
 import type { Employee } from "@/app/generated/prisma/client";
 import {
@@ -11,6 +11,7 @@ import {
 } from "@/app/generated/prisma/enums";
 import type { EmployeeFormState } from "./validation";
 import type { EmployeeFieldOptions } from "./options";
+import { getSiteOptionsFor } from "./siteScope";
 
 const fieldClass =
   "mt-1.5 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
@@ -62,11 +63,15 @@ function SelectOrAddField({
   name,
   options,
   defaultValue = "",
+  onValueChange,
 }: {
   label: string;
   name: string;
   options: string[];
   defaultValue?: string;
+  // Notifies the parent whenever the field's value changes, so dependent
+  // fields (e.g. Site, scoped by Company/Department) can recompute.
+  onValueChange?: (value: string) => void;
 }) {
   // Guarantee the saved value is always selectable, even if it's no longer
   // among the distinct options (e.g. it was the last record using it).
@@ -89,7 +94,10 @@ function SelectOrAddField({
             value={value}
             autoFocus
             placeholder={`New ${label.toLowerCase()}`}
-            onChange={(event) => setValue(event.target.value)}
+            onChange={(event) => {
+              setValue(event.target.value);
+              onValueChange?.(event.target.value);
+            }}
             className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
           />
           <button
@@ -97,6 +105,7 @@ function SelectOrAddField({
             onClick={() => {
               setAdding(false);
               setValue(defaultValue);
+              onValueChange?.(defaultValue);
             }}
             className="shrink-0 rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
           >
@@ -111,8 +120,10 @@ function SelectOrAddField({
             if (event.target.value === ADD_NEW) {
               setAdding(true);
               setValue("");
+              onValueChange?.("");
             } else {
               setValue(event.target.value);
+              onValueChange?.(event.target.value);
             }
           }}
           className={fieldClass}
@@ -147,6 +158,19 @@ export function EmployeeForm({
   fieldOptions: EmployeeFieldOptions;
 }) {
   const [state, formAction, pending] = useActionState(action, {});
+
+  // Track the selected Company and Department so the Site dropdown can be scoped
+  // to them. Initialized from the employee when editing.
+  const [company, setCompany] = useState(employee?.company ?? "");
+  const [department, setDepartment] = useState(employee?.department ?? "");
+
+  // Sites valid for the current company/department, recomputed whenever either
+  // changes. The employee's saved site (if outside this scope) stays selectable
+  // via SelectOrAddField's defaultValue merge.
+  const siteOptions = useMemo(
+    () => getSiteOptionsFor(company, department),
+    [company, department],
+  );
 
   return (
     <form
@@ -203,12 +227,14 @@ export function EmployeeForm({
         name="company"
         options={fieldOptions.company}
         defaultValue={employee?.company ?? ""}
+        onValueChange={setCompany}
       />
       <SelectOrAddField
         label="Department"
         name="department"
         options={fieldOptions.department}
         defaultValue={employee?.department ?? ""}
+        onValueChange={setDepartment}
       />
       <SelectOrAddField
         label="Role title"
@@ -225,7 +251,7 @@ export function EmployeeForm({
       <SelectOrAddField
         label="Site"
         name="site"
-        options={fieldOptions.site}
+        options={siteOptions}
         defaultValue={employee?.site ?? ""}
       />
       <SelectOrAddField

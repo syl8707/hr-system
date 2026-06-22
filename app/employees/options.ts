@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { SITE_OPTIONS } from "./siteOptions";
 
 // The free-text columns we surface as "pick an existing value or add a new one"
 // dropdowns on the employee form.
@@ -41,7 +42,9 @@ export async function getEmployeeFieldOptions(): Promise<EmployeeFieldOptions> {
   return {
     company: distinct(rows.map((r) => r.company)),
     department: distinct(rows.map((r) => r.department)),
-    site: distinct(rows.map((r) => r.site)),
+    // Union the canonical site list with whatever's already in the DB so the
+    // predefined sites always appear, even when unassigned to any employee.
+    site: distinct([...SITE_OPTIONS, ...rows.map((r) => r.site)]),
     roleTitle: distinct(rows.map((r) => r.roleTitle)),
     roleFamily: distinct(rows.map((r) => r.roleFamily)),
     manager: distinct(rows.map((r) => r.manager)),

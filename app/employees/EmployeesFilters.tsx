@@ -3,6 +3,8 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 
+import { DEFAULT_SORT, SORT_OPTIONS } from "./query";
+
 const controlClass =
   "rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
 
@@ -134,6 +136,19 @@ export function EmployeesFilters({
         {statuses.map((value) => (
           <option key={value} value={value}>
             {value}
+          </option>
+        ))}
+      </select>
+
+      <select
+        value={searchParams.get("sort") || DEFAULT_SORT}
+        onChange={(event) => onSelect("sort", event.target.value)}
+        aria-label="Sort by"
+        className={controlClass}
+      >
+        {SORT_OPTIONS.map((option) => (
+          <option key={option.value} value={option.value}>
+            Sort: {option.label}
           </option>
         ))}
       </select>
