@@ -2,6 +2,8 @@
 
 A custom HR management web application (a lightweight HRIS) for managing employee records and viewing workforce analytics. Built in-house instead of buying an off-the-shelf product, so it can grow with the company's needs.
 
+> **📖 Taking this project over, or keeping it running?** Read **[MAINTENANCE.md](./MAINTENANCE.md)** — a plain, step-by-step maintenance & handover guide (env vars, deployment, routine tasks, data scripts, login setup, and troubleshooting) written for a new or non-original maintainer.
+
 > **Status:** Core features complete and demo-ready, running locally on sample data. Microsoft sign-in and deployment are in progress. See [Project Status & Roadmap](#project-status--roadmap).
 
 ---
