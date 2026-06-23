@@ -35,6 +35,21 @@ const nav = [
     ),
   },
   {
+    href: "/review",
+    label: "Data to review",
+    // Clipboard / checklist icon
+    icon: (
+      <svg
+        viewBox="0 0 20 20"
+        fill="currentColor"
+        aria-hidden="true"
+        className="h-5 w-5"
+      >
+        <path d="M7.5 3.5A1.5 1.5 0 0 1 9 2h2a1.5 1.5 0 0 1 1.5 1.5h.5A2.5 2.5 0 0 1 15.5 6v9a2.5 2.5 0 0 1-2.5 2.5H7A2.5 2.5 0 0 1 4.5 15V6A2.5 2.5 0 0 1 7 3.5h.5ZM9 3.5a.5.5 0 0 0-.5.5h3a.5.5 0 0 0-.5-.5H9Zm-.22 6.53a.75.75 0 0 0-1.06-1.06L6.5 9.94l-.22-.22a.75.75 0 0 0-1.06 1.06l.75.75a.75.75 0 0 0 1.06 0l1.75-1.75Zm1.97-.78a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Zm.75 2.75a.75.75 0 0 0 0 1.5h2.5a.75.75 0 0 0 0-1.5h-2.5Z" />
+      </svg>
+    ),
+  },
+  {
     href: "/activity",
     label: "Activity",
     // Clock / history icon
