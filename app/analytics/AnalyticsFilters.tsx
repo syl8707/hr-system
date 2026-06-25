@@ -36,8 +36,15 @@ export function AnalyticsFilters({
   const department = searchParams.get("department") ?? "";
   const site = searchParams.get("site") ?? "";
   const role = searchParams.get("role") ?? "";
+  const start = searchParams.get("start") ?? "";
+  const end = searchParams.get("end") ?? "";
   const hasFilters =
-    company !== "" || department !== "" || site !== "" || role !== "";
+    company !== "" ||
+    department !== "" ||
+    site !== "" ||
+    role !== "" ||
+    start !== "" ||
+    end !== "";
 
   return (
     <div
@@ -104,6 +111,33 @@ export function AnalyticsFilters({
           </option>
         ))}
       </select>
+
+      {/* Date window: every metric reflects employees active at some point in
+          [start, end]. Leaving a bound empty lets the server fill it in — a
+          missing end means today, a missing start means the earliest hire. */}
+      <label className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+        <span className="px-1">Start</span>
+        <input
+          type="date"
+          value={start}
+          max={end || undefined}
+          onChange={(event) => onSelect("start", event.target.value)}
+          aria-label="Window start date"
+          className={controlClass}
+        />
+      </label>
+
+      <label className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+        <span className="px-1">End</span>
+        <input
+          type="date"
+          value={end}
+          min={start || undefined}
+          onChange={(event) => onSelect("end", event.target.value)}
+          aria-label="Window end date"
+          className={controlClass}
+        />
+      </label>
 
       {hasFilters ? (
         <button

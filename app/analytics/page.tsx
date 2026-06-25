@@ -17,6 +17,22 @@ function first(value: string | string[] | undefined): string {
   return (Array.isArray(value) ? value[0] : value) ?? "";
 }
 
+// Parse a `YYYY-MM-DD` date param (as produced by the <input type="date">
+// filters) into a UTC instant, returning null for empty or unparseable values
+// so a bad param degrades to "no bound" rather than erroring. The start bound
+// anchors to the start of its day and the end bound to the end of its day, so
+// the window is inclusive of employees hired or terminated on the edge dates.
+function parseDateParam(value: string, edge: "start" | "end"): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const suffix = edge === "start" ? "T00:00:00.000Z" : "T23:59:59.999Z";
+  const date = new Date(`${value}${suffix}`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatDay(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
 // Status slice colors mirror the StatusBadge palette so the donut reads the
 // same as the badges elsewhere in the app.
 const STATUS_META: Record<EmployeeStatus, { label: string; color: string }> = {
@@ -68,6 +84,27 @@ function bucketTenure(hireDates: { hireDate: Date | null }[]): CategoryDatum[] {
   return counts.map((b) => ({ name: b.label, value: b.value }));
 }
 
+// Tenure buckets measured as of the window end B: each included employee's
+// tenure runs from hireDate to min(terminationDate, B), so a person who left
+// during the window contributes the tenure they had reached when they left.
+function bucketTenureAt(
+  rows: { hireDate: Date | null; terminationDate: Date | null }[],
+  endMs: number,
+): CategoryDatum[] {
+  const counts = TENURE_BUCKETS.map((bucket) => ({ ...bucket, value: 0 }));
+  for (const { hireDate, terminationDate } of rows) {
+    if (!hireDate) continue;
+    const endedAt =
+      terminationDate && terminationDate.getTime() < endMs
+        ? terminationDate.getTime()
+        : endMs;
+    const years = (endedAt - hireDate.getTime()) / MS_PER_YEAR;
+    const bucket = counts.find((b) => years >= b.min && years < b.max);
+    if (bucket) bucket.value += 1;
+  }
+  return counts.map((b) => ({ name: b.label, value: b.value }));
+}
+
 function round1(value: number) {
   return Math.round(value * 10) / 10;
 }
@@ -80,17 +117,23 @@ function round1(value: number) {
 //
 // Average headcount uses the start-of-year and end-of-year counts, where a
 // person is "present" at instant T if hired on/before T and not yet terminated.
+//
+// When a window [a, b] (ms) is given, only hires/terminations that fall inside
+// it are counted — so the chart's years collapse to those touching the window —
+// while headcount (the turnover denominator) still uses every row's real dates.
 function computeWorkforceTrend(
   rows: { hireDate: Date | null; terminationDate: Date | null }[],
+  window?: { a: number; b: number },
 ): TrendDatum[] {
+  const inWindow = (t: number) => !window || (t >= window.a && t <= window.b);
   const hireByYear = new Map<number, number>();
   const termByYear = new Map<number, number>();
   for (const { hireDate, terminationDate } of rows) {
-    if (hireDate) {
+    if (hireDate && inWindow(hireDate.getTime())) {
       const y = hireDate.getUTCFullYear();
       hireByYear.set(y, (hireByYear.get(y) ?? 0) + 1);
     }
-    if (terminationDate) {
+    if (terminationDate && inWindow(terminationDate.getTime())) {
       const y = terminationDate.getUTCFullYear();
       termByYear.set(y, (termByYear.get(y) ?? 0) + 1);
     }
@@ -178,13 +221,72 @@ export default async function AnalyticsPage({
   const department = first(sp.department);
   const site = first(sp.site);
   const role = first(sp.role);
+  const startParam = first(sp.start);
+  const endParam = first(sp.end);
 
-  // The slice that every metric and chart below is computed over.
+  // The category/equality filters. Every metric below is scoped by these.
   const where: Prisma.EmployeeWhereInput = {};
   if (company) where.company = company;
   if (department) where.department = department;
   if (site) where.site = site;
   if (role) where.roleTitle = role;
+
+  // Optional date window. An employee is included when they were active at some
+  // point within [windowStart, windowEnd]: hired on/before the end and either
+  // still active or terminated on/after the start. Employees with no hireDate
+  // can't be placed in time, so the window excludes them. With neither bound
+  // set the window is inactive and the dashboard behaves exactly as before.
+  const parsedStart = parseDateParam(startParam, "start");
+  const parsedEnd = parseDateParam(endParam, "end");
+  const hasWindow = parsedStart !== null || parsedEnd !== null;
+
+  let windowStart: Date | null = null;
+  let windowEnd: Date | null = null;
+  if (hasWindow) {
+    // Partial ranges: missing end ⇒ today; missing start ⇒ earliest hire in
+    // the filtered slice (so the lower bound never clips anyone out).
+    const now = new Date();
+    windowEnd =
+      parsedEnd ??
+      new Date(
+        Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate(),
+          23,
+          59,
+          59,
+          999,
+        ),
+      );
+    if (parsedStart) {
+      windowStart = parsedStart;
+    } else {
+      const earliest = await prisma.employee.aggregate({
+        where: { ...where, hireDate: { not: null } },
+        _min: { hireDate: true },
+      });
+      windowStart = earliest._min.hireDate ?? new Date(0);
+    }
+  }
+
+  // The slice that every metric and chart below is computed over: the category
+  // filters AND, when a window is active, the active-during-window predicate.
+  const slice: Prisma.EmployeeWhereInput =
+    hasWindow && windowStart && windowEnd
+      ? {
+          AND: [
+            where,
+            { hireDate: { not: null, lte: windowEnd } },
+            {
+              OR: [
+                { terminationDate: null },
+                { terminationDate: { gte: windowStart } },
+              ],
+            },
+          ],
+        }
+      : where;
 
   const [
     statusGroups,
@@ -199,20 +301,21 @@ export default async function AnalyticsPage({
     siteRows,
     roleRows,
   ] = await Promise.all([
-    prisma.employee.groupBy({ by: ["status"], where, _count: { _all: true } }),
-    prisma.employee.groupBy({ by: ["company"], where, _count: { _all: true } }),
-    prisma.employee.groupBy({ by: ["department"], where, _count: { _all: true } }),
-    prisma.employee.groupBy({ by: ["site"], where, _count: { _all: true } }),
-    prisma.employee.groupBy({ by: ["employmentType"], where, _count: { _all: true } }),
-    // Active employees with a hire date — bucketed into tenure ranges below.
+    prisma.employee.groupBy({ by: ["status"], where: slice, _count: { _all: true } }),
+    prisma.employee.groupBy({ by: ["company"], where: slice, _count: { _all: true } }),
+    prisma.employee.groupBy({ by: ["department"], where: slice, _count: { _all: true } }),
+    prisma.employee.groupBy({ by: ["site"], where: slice, _count: { _all: true } }),
+    prisma.employee.groupBy({ by: ["employmentType"], where: slice, _count: { _all: true } }),
+    // Active employees with a hire date — bucketed into tenure ranges for the
+    // default (no-window) view, measured as of today.
     prisma.employee.findMany({
       where: { ...where, status: EmployeeStatus.ACTIVE, hireDate: { not: null } },
       select: { hireDate: true },
     }),
-    // Hire/termination dates for the whole slice — drives the per-year hires,
-    // terminations, headcount, turnover and retention.
+    // Hire/termination dates for the slice — drives the per-year hires,
+    // terminations, headcount, turnover and retention (and windowed tenure).
     prisma.employee.findMany({
-      where,
+      where: slice,
       select: { hireDate: true, terminationDate: true },
     }),
     // Full (unfiltered) option lists so the filter selects can always switch.
@@ -278,11 +381,21 @@ export default async function AnalyticsPage({
     }))
     .sort((a, b) => b.value - a.value);
 
-  // --- Tenure distribution (active employees) --------------------------------
-  const tenureData = bucketTenure(activeHireDates);
+  // --- Tenure distribution ---------------------------------------------------
+  // Default view: active employees as of today. Windowed view: the whole
+  // included population, with tenure measured as of the window end.
+  const tenureData =
+    hasWindow && windowEnd
+      ? bucketTenureAt(employeeDates, windowEnd.getTime())
+      : bucketTenure(activeHireDates);
 
   // --- Hires, terminations, turnover & retention per year --------------------
-  const trendData = computeWorkforceTrend(employeeDates);
+  const trendData = computeWorkforceTrend(
+    employeeDates,
+    hasWindow && windowStart && windowEnd
+      ? { a: windowStart.getTime(), b: windowEnd.getTime() }
+      : undefined,
+  );
 
   const companies = companyRows
     .map((row) => row.company)
@@ -297,14 +410,24 @@ export default async function AnalyticsPage({
     .map((row) => row.roleTitle)
     .filter((value): value is string => value !== null);
 
+  const windowLabel =
+    hasWindow && windowStart && windowEnd
+      ? `${formatDay(windowStart)} → ${formatDay(windowEnd)}`
+      : null;
+
   const sliceLabel = [
     company ? `${company}` : null,
     department ? `${department}` : null,
     site ? `${site}` : null,
     role ? `${role}` : null,
+    windowLabel,
   ]
     .filter(Boolean)
     .join(" · ");
+
+  const tenureSubtitle = hasWindow
+    ? "Included employees, by tenure as of the window end"
+    : "Active employees, by years since hire date";
 
   return (
     <main className="mx-auto w-full max-w-6xl px-8 py-10">
@@ -349,10 +472,7 @@ export default async function AnalyticsPage({
         <ChartCard title="By employment type" subtitle="Share of total headcount">
           <Donut data={typeData} total={total} />
         </ChartCard>
-        <ChartCard
-          title="Tenure distribution"
-          subtitle="Active employees, by years since hire date"
-        >
+        <ChartCard title="Tenure distribution" subtitle={tenureSubtitle}>
           <CategoryBar data={tenureData} />
         </ChartCard>
         <ChartCard
