@@ -229,6 +229,7 @@ export default async function EmployeesPage({
                   <th className="px-4 py-3 font-medium">Type</th>
                   <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 font-medium">Hire date</th>
+                  <th className="px-4 py-3 font-medium">Termination date</th>
                   <th className="px-4 py-3 font-medium">Duration</th>
                   <th className="px-4 py-3 font-medium">Updated</th>
                 </tr>
@@ -307,6 +308,14 @@ export default async function EmployeesPage({
                           className={`${cell} tabular-nums`}
                         >
                           {formatDate(employee.hireDate)}
+                        </Link>
+                      </td>
+                      <td>
+                        <Link
+                          href={href}
+                          className={`${cell} tabular-nums`}
+                        >
+                          {formatDate(employee.terminationDate)}
                         </Link>
                       </td>
                       <td>
