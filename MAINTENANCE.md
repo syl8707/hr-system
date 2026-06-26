@@ -368,7 +368,62 @@ fail there.
 
 ---
 
-## 10. Troubleshooting
+## 10. Probation reminders
+
+The app can email a reminder around each active employee's **3-month mark** (counted
+from their `hireDate`) so someone can schedule their probation review. The reminder
+goes to one configurable recipient and carries a **calendar invite** (`.ics`) for the
+3-month date, so it lands on their calendar as an all-day hold.
+
+**How it fires.** A Vercel Cron job (configured in `vercel.json`) hits
+`/api/cron/probation-reminders` once a day at 13:00 UTC. The endpoint finds **ACTIVE**
+employees whose 3-month anniversary is **exactly `PROBATION_REMINDER_LEAD_DAYS` away**
+(default 7), and emails the recipient one reminder per match. Firing on a single exact
+day means each employee triggers **once** — that's why there's no dedupe table and no
+schema change.
+
+**It is forward-only.** The reminder fires `LEAD_DAYS` *before* the 3-month mark; it
+does **not** look back, so employees whose mark has already passed (or passed before
+this feature was deployed) are never emailed retroactively. Employees with no
+`hireDate` are skipped.
+
+**It no-ops safely until email is configured.** Sending goes through `lib/email.ts`,
+which uses **Resend** when `RESEND_API_KEY` is set and otherwise logs a line
+(`email skipped: no provider configured …`) and sends nothing. So the feature is safe
+to deploy before a provider exists — it just runs, logs who it *would* have emailed,
+and reports `sent: 0`. The provider is pluggable: adding e.g. Microsoft Graph later is
+a branch in `lib/email.ts` with no changes to the reminder logic.
+
+**Environment variables** (set locally in `.env.local`, in production in Vercel →
+*Settings → Environment Variables*):
+
+| Variable | What it's for |
+|----------|----------------|
+| `PROBATION_REMINDER_TO` | The single recipient address for reminders (e.g. Jessica). If unset, the job runs but skips sending. |
+| `PROBATION_REMINDER_LEAD_DAYS` | Days before the 3-month mark to send. Optional; defaults to `7`. |
+| `EMAIL_FROM` | Sender address. Must be on a domain verified in the email provider. |
+| `RESEND_API_KEY` | The Resend provider key. **Absent ⇒ sending is a logged no-op.** Mark Sensitive in Vercel. |
+| `CRON_SECRET` | Shared secret protecting the endpoint. Vercel Cron sends it as `Authorization: Bearer <CRON_SECRET>`; requests without it get `401`. If unset, the endpoint refuses all requests. Mark Sensitive in Vercel. |
+
+**Testing it manually.** The endpoint is a `GET` protected by the same bearer token, so
+you can hit it directly (locally or in production) to see the matched-employees summary
+without waiting for the cron:
+
+```bash
+# with the dev server running (npm run dev) and CRON_SECRET set in .env.local:
+curl -s -H "Authorization: Bearer $CRON_SECRET" \
+  http://localhost:3000/api/cron/probation-reminders | jq
+```
+
+It returns JSON like `{ matched, sent, skipped, anniversaryDate, employees: [...] }`.
+With no `RESEND_API_KEY`, `sent` is `0` and the server log shows each skipped send.
+
+> The cron route is deliberately excluded from the Auth.js login middleware
+> (`middleware.ts`) — it has no user session and authenticates solely via `CRON_SECRET`.
+
+---
+
+## 11. Troubleshooting
 
 | Symptom | Likely cause & fix |
 |---------|--------------------|
@@ -382,7 +437,7 @@ fail there.
 
 ---
 
-## 11. Who to contact / where things live
+## 12. Who to contact / where things live
 
 Fill these in for your team:
 
