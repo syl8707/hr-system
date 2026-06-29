@@ -7,6 +7,7 @@ import {
   Donut,
   WorkforceTrend,
   type CategoryDatum,
+  type ColoredDatum,
   type TrendDatum,
 } from "./Charts";
 
@@ -41,12 +42,18 @@ const STATUS_META: Record<EmployeeStatus, { label: string; color: string }> = {
   [EmployeeStatus.TERMINATED]: { label: "Terminated", color: "#dc2626" }, // red-600
 };
 
-const EMPLOYMENT_TYPE_LABEL: Record<EmploymentType, string> = {
-  [EmploymentType.FULL_TIME]: "Full-time",
-  [EmploymentType.PART_TIME]: "Part-time",
-  [EmploymentType.CONTRACTOR]: "Contractor",
-  [EmploymentType.SEASONAL]: "Seasonal",
+// Each employment type gets a fixed slice color from a categorical palette of
+// distinct hues (indigo / teal / orange / pink), so the donut stays readable
+// even though slices are reordered by headcount. "Unspecified" falls back to a
+// neutral slate. Hues are spaced far enough apart to tell apart at a glance.
+const EMPLOYMENT_TYPE_META: Record<EmploymentType, { label: string; color: string }> = {
+  [EmploymentType.FULL_TIME]: { label: "Full-time", color: "#4f46e5" }, // indigo-600
+  [EmploymentType.PART_TIME]: { label: "Part-time", color: "#0d9488" }, // teal-600
+  [EmploymentType.CONTRACTOR]: { label: "Contractor", color: "#ea580c" }, // orange-600
+  [EmploymentType.SEASONAL]: { label: "Seasonal", color: "#db2777" }, // pink-600
 };
+
+const UNSPECIFIED_TYPE_COLOR = "#94a3b8"; // slate-400
 
 // Active-employee tenure buckets, in years since hireDate. Boundaries are
 // contiguous so every active employee with a hire date lands in exactly one.
@@ -372,12 +379,15 @@ export default async function AnalyticsPage({
     }))
     .sort((a, b) => b.value - a.value);
 
-  const typeData: CategoryDatum[] = typeGroups
+  const typeData: ColoredDatum[] = typeGroups
     .map((row) => ({
       name: row.employmentType
-        ? EMPLOYMENT_TYPE_LABEL[row.employmentType]
+        ? EMPLOYMENT_TYPE_META[row.employmentType].label
         : "Unspecified",
       value: row._count._all,
+      color: row.employmentType
+        ? EMPLOYMENT_TYPE_META[row.employmentType].color
+        : UNSPECIFIED_TYPE_COLOR,
     }))
     .sort((a, b) => b.value - a.value);
 
