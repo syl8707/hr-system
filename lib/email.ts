@@ -1,12 +1,15 @@
 // Provider-agnostic email sending.
 //
 // Callers use `sendEmail(...)` and never learn which provider (if any) is
-// behind it. Today there is one real provider — Resend — selected when
-// `RESEND_API_KEY` is set. When no provider env is configured, sending is a
-// logged no-op that returns `{ sent: false }` rather than throwing, so the
-// surrounding feature is safe to deploy before email is wired up. Adding a
-// new provider later (e.g. Microsoft Graph) means adding a branch here; no
-// caller changes.
+// behind it. The provider is chosen by which env vars are set, checked in
+// order: Azure Communication Services (`ACS_CONNECTION_STRING`) is the active
+// provider when configured, falling back to Resend (`RESEND_API_KEY`). When
+// no provider env is configured, sending is a logged no-op that returns
+// `{ sent: false }` rather than throwing, so the surrounding feature is safe
+// to deploy before email is wired up. Adding a new provider later means adding
+// a branch here; no caller changes.
+
+import { EmailClient } from "@azure/communication-email";
 
 export type SendEmailInput = {
   to: string;
@@ -77,10 +80,65 @@ async function sendViaResend(
   return { sent: true, provider: "resend", id: data.id };
 }
 
+async function sendViaAcs(
+  input: SendEmailInput,
+  connectionString: string,
+): Promise<SendEmailResult> {
+  const senderAddress = process.env.EMAIL_FROM;
+  if (!senderAddress) {
+    return {
+      sent: false,
+      reason: "ACS_CONNECTION_STRING is set but EMAIL_FROM is missing",
+    };
+  }
+
+  try {
+    const client = new EmailClient(connectionString);
+
+    const message = {
+      senderAddress,
+      content: {
+        subject: input.subject,
+        html: input.html,
+      },
+      recipients: {
+        to: [{ address: input.to }],
+      },
+      ...(input.icsContent
+        ? {
+            attachments: [
+              {
+                name: input.icsFilename ?? "invite.ics",
+                contentType: "text/calendar",
+                contentInBase64: Buffer.from(input.icsContent).toString(
+                  "base64",
+                ),
+              },
+            ],
+          }
+        : {}),
+    };
+
+    const poller = await client.beginSend(message);
+    const result = await poller.pollUntilDone();
+    return { sent: true, provider: "acs", id: result.id };
+  } catch (error) {
+    // A send failure must never crash the cron route. Log and report back.
+    const reason = error instanceof Error ? error.message : String(error);
+    console.error(`email send via ACS failed: ${reason}`);
+    return { sent: false, reason };
+  }
+}
+
 export async function sendEmail(
   input: SendEmailInput,
 ): Promise<SendEmailResult> {
+  const acsConnectionString = process.env.ACS_CONNECTION_STRING;
   const resendApiKey = process.env.RESEND_API_KEY;
+
+  if (acsConnectionString) {
+    return sendViaAcs(input, acsConnectionString);
+  }
 
   if (resendApiKey) {
     return sendViaResend(input, resendApiKey);

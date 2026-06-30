@@ -388,11 +388,21 @@ this feature was deployed) are never emailed retroactively. Employees with no
 `hireDate` are skipped.
 
 **It no-ops safely until email is configured.** Sending goes through `lib/email.ts`,
-which uses **Resend** when `RESEND_API_KEY` is set and otherwise logs a line
-(`email skipped: no provider configured …`) and sends nothing. So the feature is safe
-to deploy before a provider exists — it just runs, logs who it *would* have emailed,
-and reports `sent: 0`. The provider is pluggable: adding e.g. Microsoft Graph later is
-a branch in `lib/email.ts` with no changes to the reminder logic.
+which picks a provider by which env vars are set, in this order:
+
+1. **Azure Communication Services (ACS)** — used when `ACS_CONNECTION_STRING` is set.
+   **This is now the active provider.** It creates an ACS `EmailClient` from the
+   connection string, sends from `EMAIL_FROM`, and attaches the `.ics` invite when
+   present.
+2. **Resend** — used when `ACS_CONNECTION_STRING` is unset but `RESEND_API_KEY` is set.
+3. **No-op** — when neither is set, it logs a line
+   (`email skipped: no provider configured …`) and sends nothing.
+
+So the feature is safe to deploy before a provider exists — it just runs, logs who it
+*would* have emailed, and reports `sent: 0`. A send failure (e.g. ACS rejecting the
+request) is caught inside `lib/email.ts`, logged, and reported as `sent: false`, so it
+never crashes the cron route. The provider is pluggable: adding another later is a
+branch in `lib/email.ts` with no changes to the reminder logic.
 
 **Environment variables** (set locally in `.env.local`, in production in Vercel →
 *Settings → Environment Variables*):
@@ -401,8 +411,9 @@ a branch in `lib/email.ts` with no changes to the reminder logic.
 |----------|----------------|
 | `PROBATION_REMINDER_TO` | The single recipient address for reminders (e.g. Jessica). If unset, the job runs but skips sending. |
 | `PROBATION_REMINDER_LEAD_DAYS` | Days before the 3-month mark to send. Optional; defaults to `7`. |
-| `EMAIL_FROM` | Sender address. Must be on a domain verified in the email provider. |
-| `RESEND_API_KEY` | The Resend provider key. **Absent ⇒ sending is a logged no-op.** Mark Sensitive in Vercel. |
+| `EMAIL_FROM` | Sender address. Must be on a domain verified in the active email provider (an ACS-verified domain, or a Resend-verified domain). |
+| `ACS_CONNECTION_STRING` | Azure Communication Services connection string (Azure portal → the ACS resource → *Keys* → *Connection string*). **When set, ACS is the active provider.** Mark Sensitive in Vercel. |
+| `RESEND_API_KEY` | The Resend provider key (fallback, used only when `ACS_CONNECTION_STRING` is unset). **With neither this nor `ACS_CONNECTION_STRING` ⇒ sending is a logged no-op.** Mark Sensitive in Vercel. |
 | `CRON_SECRET` | Shared secret protecting the endpoint. Vercel Cron sends it as `Authorization: Bearer <CRON_SECRET>`; requests without it get `401`. If unset, the endpoint refuses all requests. Mark Sensitive in Vercel. |
 
 **Testing it manually.** The endpoint is a `GET` protected by the same bearer token, so
@@ -416,7 +427,8 @@ curl -s -H "Authorization: Bearer $CRON_SECRET" \
 ```
 
 It returns JSON like `{ matched, sent, skipped, anniversaryDate, employees: [...] }`.
-With no `RESEND_API_KEY`, `sent` is `0` and the server log shows each skipped send.
+With no provider configured (neither `ACS_CONNECTION_STRING` nor `RESEND_API_KEY`),
+`sent` is `0` and the server log shows each skipped send.
 
 > The cron route is deliberately excluded from the Auth.js login middleware
 > (`middleware.ts`) — it has no user session and authenticates solely via `CRON_SECRET`.
