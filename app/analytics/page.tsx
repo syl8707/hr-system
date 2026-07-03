@@ -1,174 +1,23 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/app/generated/prisma/client";
-import { EmployeeStatus, EmploymentType } from "@/app/generated/prisma/enums";
+import { EmployeeStatus } from "@/app/generated/prisma/enums";
 import { AnalyticsFilters } from "./AnalyticsFilters";
+import { CategoryBar, Donut, WorkforceTrend, type ColoredDatum } from "./Charts";
 import {
-  CategoryBar,
-  Donut,
-  WorkforceTrend,
-  type CategoryDatum,
-  type ColoredDatum,
-  type TrendDatum,
-} from "./Charts";
+  bucketTenure,
+  bucketTenureAt,
+  computeWorkforceTrend,
+  EMPLOYMENT_TYPE_META,
+  first,
+  formatDay,
+  parseDateParam,
+  STATUS_META,
+  toCategoryData,
+  UNSPECIFIED_TYPE_COLOR,
+} from "./metrics";
 
 export const dynamic = "force-dynamic";
-
-// searchParams values are string | string[] | undefined; normalize to one string.
-function first(value: string | string[] | undefined): string {
-  return (Array.isArray(value) ? value[0] : value) ?? "";
-}
-
-// Parse a `YYYY-MM-DD` date param (as produced by the <input type="date">
-// filters) into a UTC instant, returning null for empty or unparseable values
-// so a bad param degrades to "no bound" rather than erroring. The start bound
-// anchors to the start of its day and the end bound to the end of its day, so
-// the window is inclusive of employees hired or terminated on the edge dates.
-function parseDateParam(value: string, edge: "start" | "end"): Date | null {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-  const suffix = edge === "start" ? "T00:00:00.000Z" : "T23:59:59.999Z";
-  const date = new Date(`${value}${suffix}`);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function formatDay(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
-
-// Status slice colors mirror the StatusBadge palette so the donut reads the
-// same as the badges elsewhere in the app.
-const STATUS_META: Record<EmployeeStatus, { label: string; color: string }> = {
-  [EmployeeStatus.ACTIVE]: { label: "Active", color: "#16a34a" }, // green-600
-  [EmployeeStatus.LEAVE_OF_ABSENCE]: { label: "On leave", color: "#d97706" }, // amber-600
-  [EmployeeStatus.TERMINATED]: { label: "Terminated", color: "#dc2626" }, // red-600
-};
-
-// Each employment type gets a fixed slice color from a categorical palette of
-// distinct hues (indigo / teal / orange / pink), so the donut stays readable
-// even though slices are reordered by headcount. "Unspecified" falls back to a
-// neutral slate. Hues are spaced far enough apart to tell apart at a glance.
-const EMPLOYMENT_TYPE_META: Record<EmploymentType, { label: string; color: string }> = {
-  [EmploymentType.FULL_TIME]: { label: "Full-time", color: "#4f46e5" }, // indigo-600
-  [EmploymentType.PART_TIME]: { label: "Part-time", color: "#0d9488" }, // teal-600
-  [EmploymentType.CONTRACTOR]: { label: "Contractor", color: "#ea580c" }, // orange-600
-  [EmploymentType.SEASONAL]: { label: "Seasonal", color: "#db2777" }, // pink-600
-};
-
-const UNSPECIFIED_TYPE_COLOR = "#94a3b8"; // slate-400
-
-// Active-employee tenure buckets, in years since hireDate. Boundaries are
-// contiguous so every active employee with a hire date lands in exactly one.
-const TENURE_BUCKETS: { label: string; min: number; max: number }[] = [
-  { label: "<1", min: 0, max: 1 },
-  { label: "1-2", min: 1, max: 3 },
-  { label: "3-5", min: 3, max: 5 },
-  { label: "5-10", min: 5, max: 10 },
-  { label: "10+", min: 10, max: Infinity },
-];
-
-const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000;
-
-// Turn a groupBy result over a nullable string field into chart data, mapping
-// nulls to "Unassigned" and sorting by headcount (desc) for a readable chart.
-function toCategoryData(
-  rows: { key: string | null; count: number }[],
-): CategoryDatum[] {
-  return rows
-    .map((row) => ({ name: row.key ?? "Unassigned", value: row.count }))
-    .sort((a, b) => b.value - a.value);
-}
-
-// Bucket active employees into tenure ranges. Lives at module scope (not in the
-// component) since it reads the current time, which must not happen in render.
-function bucketTenure(hireDates: { hireDate: Date | null }[]): CategoryDatum[] {
-  const now = Date.now();
-  const counts = TENURE_BUCKETS.map((bucket) => ({ ...bucket, value: 0 }));
-  for (const { hireDate } of hireDates) {
-    if (!hireDate) continue;
-    const years = (now - hireDate.getTime()) / MS_PER_YEAR;
-    const bucket = counts.find((b) => years >= b.min && years < b.max);
-    if (bucket) bucket.value += 1;
-  }
-  return counts.map((b) => ({ name: b.label, value: b.value }));
-}
-
-// Tenure buckets measured as of the window end B: each included employee's
-// tenure runs from hireDate to min(terminationDate, B), so a person who left
-// during the window contributes the tenure they had reached when they left.
-function bucketTenureAt(
-  rows: { hireDate: Date | null; terminationDate: Date | null }[],
-  endMs: number,
-): CategoryDatum[] {
-  const counts = TENURE_BUCKETS.map((bucket) => ({ ...bucket, value: 0 }));
-  for (const { hireDate, terminationDate } of rows) {
-    if (!hireDate) continue;
-    const endedAt =
-      terminationDate && terminationDate.getTime() < endMs
-        ? terminationDate.getTime()
-        : endMs;
-    const years = (endedAt - hireDate.getTime()) / MS_PER_YEAR;
-    const bucket = counts.find((b) => years >= b.min && years < b.max);
-    if (bucket) bucket.value += 1;
-  }
-  return counts.map((b) => ({ name: b.label, value: b.value }));
-}
-
-function round1(value: number) {
-  return Math.round(value * 10) / 10;
-}
-
-// Per-year hires, terminations, turnover and retention, all derived from
-// hire/termination dates so they respect the active filter slice.
-//
-//   turnover  = terminations that year ÷ average headcount that year × 100
-//   retention = 100 − turnover
-//
-// Average headcount uses the start-of-year and end-of-year counts, where a
-// person is "present" at instant T if hired on/before T and not yet terminated.
-//
-// When a window [a, b] (ms) is given, only hires/terminations that fall inside
-// it are counted — so the chart's years collapse to those touching the window —
-// while headcount (the turnover denominator) still uses every row's real dates.
-function computeWorkforceTrend(
-  rows: { hireDate: Date | null; terminationDate: Date | null }[],
-  window?: { a: number; b: number },
-): TrendDatum[] {
-  const inWindow = (t: number) => !window || (t >= window.a && t <= window.b);
-  const hireByYear = new Map<number, number>();
-  const termByYear = new Map<number, number>();
-  for (const { hireDate, terminationDate } of rows) {
-    if (hireDate && inWindow(hireDate.getTime())) {
-      const y = hireDate.getUTCFullYear();
-      hireByYear.set(y, (hireByYear.get(y) ?? 0) + 1);
-    }
-    if (terminationDate && inWindow(terminationDate.getTime())) {
-      const y = terminationDate.getUTCFullYear();
-      termByYear.set(y, (termByYear.get(y) ?? 0) + 1);
-    }
-  }
-
-  // Headcount present at instant T (ms): hired on/before T, terminated after T.
-  const headcountAt = (t: number) =>
-    rows.reduce((count, { hireDate, terminationDate }) => {
-      if (!hireDate || hireDate.getTime() > t) return count;
-      if (terminationDate && terminationDate.getTime() <= t) return count;
-      return count + 1;
-    }, 0);
-
-  const years = [...new Set([...hireByYear.keys(), ...termByYear.keys()])].sort(
-    (a, b) => a - b,
-  );
-
-  return years.map((year) => {
-    const hires = hireByYear.get(year) ?? 0;
-    const terminations = termByYear.get(year) ?? 0;
-    const startHc = headcountAt(Date.UTC(year, 0, 1));
-    const endHc = headcountAt(Date.UTC(year + 1, 0, 1));
-    const avgHc = (startHc + endHc) / 2;
-    const turnover = avgHc > 0 ? round1((terminations / avgHc) * 100) : null;
-    const retention = turnover === null ? null : round1(100 - turnover);
-    return { year: String(year), hires, terminations, turnover, retention };
-  });
-}
 
 function MetricCard({
   label,
@@ -439,15 +288,42 @@ export default async function AnalyticsPage({
     ? "Included employees, by tenure as of the window end"
     : "Active employees, by years since hire date";
 
+  const reportParams = new URLSearchParams();
+  if (parsedStart) reportParams.set("start", startParam);
+  if (parsedEnd) reportParams.set("end", endParam);
+  const reportQuery = reportParams.size > 0 ? `?${reportParams}` : "";
+
   return (
     <main className="mx-auto w-full max-w-6xl px-8 py-10">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
-          Analytics
-        </h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Workforce overview{sliceLabel ? ` — ${sliceLabel}` : ""}.
-        </p>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
+            Analytics
+          </h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Workforce overview{sliceLabel ? ` — ${sliceLabel}` : ""}.
+          </p>
+        </div>
+        {/* The printable report shares the date-window semantics, so carry the
+            current window over; its other filters don't apply there. */}
+        <Link
+          href={`/report${reportQuery}`}
+          className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+        >
+          <svg
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+            className="h-4 w-4"
+          >
+            <path
+              fillRule="evenodd"
+              d="M4.25 2A2.25 2.25 0 0 0 2 4.25v11.5A2.25 2.25 0 0 0 4.25 18h11.5A2.25 2.25 0 0 0 18 15.75V4.25A2.25 2.25 0 0 0 15.75 2H4.25ZM6 13.25V6.75a.75.75 0 0 1 1.5 0v6.5a.75.75 0 0 1-1.5 0Zm3.25-4.5v4.5a.75.75 0 0 0 1.5 0v-4.5a.75.75 0 0 0-1.5 0Zm3.25 2v2.5a.75.75 0 0 0 1.5 0v-2.5a.75.75 0 0 0-1.5 0Z"
+              clipRule="evenodd"
+            />
+          </svg>
+          Printable report
+        </Link>
       </div>
 
       <AnalyticsFilters
