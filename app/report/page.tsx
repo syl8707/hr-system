@@ -91,7 +91,14 @@ function ChartCard({
           {subtitle}
         </p>
       ) : null}
-      <div className={`mt-4 ${wide ? "h-80" : "h-72"}`}>{children}</div>
+      {/* report-chart / report-chart-wide only exist in the @media print
+          rules below — they pin the chart to a fixed print size and are
+          inert on screen. */}
+      <div
+        className={`report-chart mt-4 ${wide ? "report-chart-wide h-80" : "h-72"}`}
+      >
+        {children}
+      </div>
     </div>
   );
 }
@@ -239,25 +246,45 @@ export default async function ReportPage({
   return (
     <main className="mx-auto w-full max-w-5xl px-8 py-10 print:max-w-none print:px-0 print:py-0">
       {/* Print rules that reach outside this page's own markup: hide the app
-          shell (the layout's sidebar), force a white canvas, and let each
-          chart's SVG scale down to the paper width — Recharts sizes its SVGs
-          from the on-screen layout and won't re-measure for print. */}
+          shell (the layout's sidebar), force a white canvas, and pin each
+          chart to a fixed print size — Recharts sizes its SVGs from the
+          on-screen layout and won't re-measure for print. */}
       <style>{`
         @media print {
           body { background: #ffffff; color: #0f172a; }
           /* Browsers strip "background" colors to save ink, and some engines
-             extend that to SVG fills — force exact colors so bar/pie/area
-             fills survive in the PDF. */
-          body, body * {
+             extend that to SVG fills — force exact colors on the roots, on
+             every element, and on the chart SVGs themselves so bar/slice/line
+             fills and strokes survive in the PDF. */
+          html, body, body *, svg, svg * {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
           aside { display: none; }
-          .recharts-responsive-container,
-          .recharts-wrapper { width: 100% !important; }
-          .recharts-responsive-container svg {
-            max-width: 100%;
-            height: auto !important;
+          /* Recharts' ResponsiveContainer measures the on-screen layout and
+             wraps each chart in a 0×0 overflow-visible sizing div, so at
+             print time any percentage width inside that stack resolves
+             against 0 and the SVG collapses to nothing (series and axes
+             vanish while the HTML legend survives). Pin every layer —
+             container, sizing div, wrapper, and the SVG itself — to a fixed
+             pixel size that fits the printable width of Letter and A4. The
+             SVG carries a viewBox, so the already-drawn chart scales to this
+             box instead of collapsing or clipping. */
+          .report-chart,
+          .report-chart .recharts-responsive-container,
+          .report-chart .recharts-responsive-container > div,
+          .report-chart .recharts-wrapper,
+          .report-chart .recharts-wrapper > svg.recharts-surface {
+            width: 620px !important;
+            max-width: none !important;
+            height: 288px !important;
+          }
+          .report-chart-wide,
+          .report-chart-wide .recharts-responsive-container,
+          .report-chart-wide .recharts-responsive-container > div,
+          .report-chart-wide .recharts-wrapper,
+          .report-chart-wide .recharts-wrapper > svg.recharts-surface {
+            height: 320px !important;
           }
         }
       `}</style>
