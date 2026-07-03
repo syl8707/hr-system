@@ -81,12 +81,16 @@ export function CategoryBar({
   color = PALETTE[0],
   horizontal = false,
   total,
+  animate = true,
 }: {
   data: CategoryDatum[];
   color?: string;
   horizontal?: boolean;
   // When provided, tooltips show each bar's share of this total.
   total?: number;
+  // Disable for print contexts: animated marks may not be painted yet when the
+  // browser snapshots the page for the PDF.
+  animate?: boolean;
 }) {
   if (data.length === 0) return <EmptyState />;
   const formatter = withPercent(total);
@@ -114,7 +118,13 @@ export function CategoryBar({
             contentStyle={TOOLTIP_STYLE}
             formatter={formatter}
           />
-          <Bar dataKey="value" name="Employees" fill={color} radius={[0, 4, 4, 0]} />
+          <Bar
+            dataKey="value"
+            name="Employees"
+            fill={color}
+            radius={[0, 4, 4, 0]}
+            isAnimationActive={animate}
+          />
         </BarChart>
       </ResponsiveContainer>
     );
@@ -137,7 +147,13 @@ export function CategoryBar({
           contentStyle={TOOLTIP_STYLE}
           formatter={formatter}
         />
-        <Bar dataKey="value" name="Employees" fill={color} radius={[4, 4, 0, 0]} />
+        <Bar
+          dataKey="value"
+          name="Employees"
+          fill={color}
+          radius={[4, 4, 0, 0]}
+          isAnimationActive={animate}
+        />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -147,12 +163,16 @@ export function Donut({
   data,
   palette = PALETTE,
   total,
+  animate = true,
 }: {
   // When a datum carries its own `color` it wins; otherwise the palette is cycled.
   data: Array<CategoryDatum | ColoredDatum>;
   palette?: string[];
   // Defaults to the sum of the slices when not supplied.
   total?: number;
+  // Disable for print contexts: animated marks may not be painted yet when the
+  // browser snapshots the page for the PDF.
+  animate?: boolean;
 }) {
   if (data.length === 0 || data.every((d) => d.value === 0)) return <EmptyState />;
   const sum = total ?? data.reduce((acc, d) => acc + d.value, 0);
@@ -168,6 +188,7 @@ export function Donut({
           outerRadius="80%"
           paddingAngle={2}
           stroke="none"
+          isAnimationActive={animate}
           label={({ percent }) =>
             percent && percent >= 0.04 ? `${(percent * 100).toFixed(0)}%` : ""
           }
@@ -195,7 +216,15 @@ export function Donut({
   );
 }
 
-export function WorkforceTrend({ data }: { data: TrendDatum[] }) {
+export function WorkforceTrend({
+  data,
+  animate = true,
+}: {
+  data: TrendDatum[];
+  // Disable for print contexts: animated marks may not be painted yet when the
+  // browser snapshots the page for the PDF.
+  animate?: boolean;
+}) {
   if (data.length === 0) return <EmptyState />;
 
   // Hires/terminations are counts (left axis); turnover/retention are
@@ -267,6 +296,7 @@ export function WorkforceTrend({ data }: { data: TrendDatum[] }) {
           name="Hires (count)"
           fill="#4f46e5"
           radius={[4, 4, 0, 0]}
+          isAnimationActive={animate}
         />
         <Bar
           yAxisId="count"
@@ -274,6 +304,7 @@ export function WorkforceTrend({ data }: { data: TrendDatum[] }) {
           name="Terminations (count)"
           fill="#0ea5e9"
           radius={[4, 4, 0, 0]}
+          isAnimationActive={animate}
         />
         {/* Rates: bold lines in warm/green tones (right axis). White-ringed dots
             keep the markers legible where they cross the bars. */}
@@ -287,6 +318,7 @@ export function WorkforceTrend({ data }: { data: TrendDatum[] }) {
           dot={{ r: 3, fill: "#f59e0b", stroke: "#ffffff", strokeWidth: 1 }}
           activeDot={{ r: 5 }}
           connectNulls
+          isAnimationActive={animate}
         />
         <Line
           yAxisId="pct"
@@ -298,6 +330,7 @@ export function WorkforceTrend({ data }: { data: TrendDatum[] }) {
           dot={{ r: 3, fill: "#10b981", stroke: "#ffffff", strokeWidth: 1 }}
           activeDot={{ r: 5 }}
           connectNulls
+          isAnimationActive={animate}
         />
       </ComposedChart>
     </ResponsiveContainer>

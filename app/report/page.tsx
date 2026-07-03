@@ -245,6 +245,13 @@ export default async function ReportPage({
       <style>{`
         @media print {
           body { background: #ffffff; color: #0f172a; }
+          /* Browsers strip "background" colors to save ink, and some engines
+             extend that to SVG fills — force exact colors so bar/pie/area
+             fills survive in the PDF. */
+          body, body * {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
           aside { display: none; }
           .recharts-responsive-container,
           .recharts-wrapper { width: 100% !important; }
@@ -317,36 +324,38 @@ export default async function ReportPage({
       <section className="mb-10">
         <SectionHeading>Workforce breakdowns</SectionHeading>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 print:grid-cols-1">
+          {/* animate={false}: the print snapshot can happen mid-animation,
+              leaving bars/slices invisible in the PDF. */}
           <ChartCard title="Headcount by company" subtitle="Share of total headcount">
-            <CategoryBar data={companyData} total={total} horizontal />
+            <CategoryBar data={companyData} total={total} horizontal animate={false} />
           </ChartCard>
           <ChartCard
             title="Headcount by department"
             subtitle="Share of total headcount"
           >
-            <CategoryBar data={departmentData} total={total} horizontal />
+            <CategoryBar data={departmentData} total={total} horizontal animate={false} />
           </ChartCard>
           <ChartCard title="By status" subtitle="Share of total headcount">
-            <Donut data={statusData} total={total} />
+            <Donut data={statusData} total={total} animate={false} />
           </ChartCard>
           <ChartCard title="Headcount by site" subtitle="Share of total headcount">
-            <CategoryBar data={siteData} total={total} horizontal />
+            <CategoryBar data={siteData} total={total} horizontal animate={false} />
           </ChartCard>
           <ChartCard title="By employment type" subtitle="Share of total headcount">
-            <Donut data={typeData} total={total} />
+            <Donut data={typeData} total={total} animate={false} />
           </ChartCard>
           <ChartCard
             title="Tenure distribution"
             subtitle="Included employees, by tenure (years) as of the period end"
           >
-            <CategoryBar data={tenureData} />
+            <CategoryBar data={tenureData} animate={false} />
           </ChartCard>
           <ChartCard
             title="Hires, terminations & turnover"
             subtitle="Per calendar year within the period — turnover and retention as % of average headcount"
             wide
           >
-            <WorkforceTrend data={trendData} />
+            <WorkforceTrend data={trendData} animate={false} />
           </ChartCard>
         </div>
       </section>
