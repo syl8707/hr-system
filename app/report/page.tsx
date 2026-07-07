@@ -388,17 +388,27 @@ export default async function ReportPage({
       </section>
 
       {/* Accuracy footnote */}
-      <footer className="border-t border-slate-200 pt-5 dark:border-slate-800">
-        <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-          <span className="font-semibold">About these numbers:</span> hire and
-          termination dates are historical, so headcount, who was employed
-          during the period, and tenure are exact for the selected dates.
-          Department, site, company, employment type, and leave status are
-          stored as current values only — for a past period, those breakdowns
-          reflect each employee&apos;s <em>current</em> values, not their values
-          as of that date. Employees without a hire date cannot be placed in
-          time and are excluded from this report.
+      <footer className="break-inside-avoid border-t border-slate-200 pt-5 dark:border-slate-800">
+        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+          About these numbers
         </p>
+        <ul className="mt-1.5 list-disc space-y-1 pl-4 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+          <li>
+            Hire and termination dates are historical, so headcount, who was
+            employed during the period, and tenure are exact for the selected
+            dates.
+          </li>
+          <li>
+            Department, site, company, employment type, and leave status are
+            stored as current values only. For a past period, those breakdowns
+            reflect each employee&apos;s <em>current</em> values, not their
+            values as of that date.
+          </li>
+          <li>
+            Employees without a hire date cannot be placed in time and are
+            excluded from this report.
+          </li>
+        </ul>
       </footer>
     </main>
   );
