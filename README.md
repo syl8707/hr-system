@@ -13,7 +13,7 @@ A custom HR management web application (a lightweight HRIS) for managing employe
 The app has three main areas:
 
 - **Employee records** — add, edit, view, search, sort, filter, import, export, and paginate employees.
-- **Analytics dashboard** — headcount, tenure, and turnover/retention, broken down by department, site, status, and employment type, with interactive filters and a date-range window.
+- **Analytics dashboard** — headcount, tenure, and turnover/retention, broken down by department, site, status, and employment type, with interactive filters and a date-range window. A companion **printable Workforce Summary report** presents the same metrics for a chosen period, formatted to print cleanly to PDF.
 - **Activity log** — an audit trail of every create / edit / delete, with who and when.
 
 It runs on the **real company employee data** (~360 records): current employees plus past employees loaded as `TERMINATED` so the turnover/retention analytics stay accurate. A seed script (`npm run seed`) that generates fake employees still exists, but it's only for local development — production is real data.
@@ -55,6 +55,11 @@ All of these are standard, widely-used technologies, so any web developer can pi
   - Tenure distribution
   - Hires vs. terminations, with turnover % and retention % on a separate 0–100% axis
   - Company / department / site / role filters, plus a **date-range window** so you can view the workforce over any period, not just today
+- **Printable report** (`/report`) — a **Workforce Summary** for a selected reporting period (defaults to the last 12 months), linked from the analytics dashboard:
+  - Summary cards (employed during the period / active / on leave / terminated) and movements within the period (hired, terminated, net change)
+  - All the analytics charts — headcount by company, department, site, status, and employment type; tenure distribution; hires vs. terminations — reusing the dashboard's chart components and the shared metric helpers in `app/analytics/metrics.ts`, so the report and dashboard never diverge
+  - A **"Print / Save as PDF"** button; print CSS hides the nav and controls, forces a white background, pins the charts to fixed sizes so they don't collapse when printing, and avoids breaking a chart across pages
+  - An accuracy footnote: headcount, tenure, and who-was-employed are exact for any date, but department / site / company / employment type and leave status are stored as current values, so those breakdowns reflect *today's* values for past periods
 - **Probation reminders** — a daily Vercel Cron job emails a reminder near each active employee's 3-month mark, with a calendar invite attached. Sends through a pluggable email layer that no-ops safely until a provider is configured. See [Probation reminders](#probation-reminders).
 - **"Last updated" / "created" timestamps** on each record.
 - **Sample data seeding** — realistic fake employees for local development.
@@ -183,8 +188,12 @@ app/
     template/route.ts       # downloadable import template
   analytics/
     page.tsx                # dashboard (server component)
-    Charts.tsx              # chart components (client)
+    Charts.tsx              # chart components (client, shared with the report)
     AnalyticsFilters.tsx    # dashboard filters + date-range window
+    metrics.ts              # shared metric helpers (dashboard + report)
+  report/
+    page.tsx                # printable Workforce Summary report (+ print CSS)
+    ReportControls.tsx      # reporting-period picker + Print/Save-as-PDF button
   review/
     page.tsx                # "Data to review" — flags incomplete records
     query.ts                # the data-completeness checks
@@ -259,7 +268,7 @@ The app is deployed on Vercel and redeploys automatically on every push to `main
 3. Add the field to the create/edit forms (`app/employees/new` and `app/employees/[id]/edit`, via `EmployeeForm.tsx`) and the detail view.
 
 ### Add a new chart / report
-Add a component in `app/analytics/Charts.tsx` and render it from `app/analytics/page.tsx`, computing the data with a Prisma query in the page (server component).
+Add a component in `app/analytics/Charts.tsx` and render it from `app/analytics/page.tsx` (and `app/report/page.tsx` if it belongs on the printable report), computing the data with a Prisma query in the page (server component). Metric calculations shared by the dashboard and the report live in `app/analytics/metrics.ts` — put new ones there so the two stay in sync.
 
 ### Add a new "data to review" check
 Add an entry to `REVIEW_CHECKS` in `app/review/query.ts` — the summary counts, the filter, and the Issues column all derive from that list.
@@ -285,6 +294,7 @@ Re-run `npm run seed` (clear existing rows first if needed). Local development o
 - "Last updated" timestamps, per-employee History, and a roster-wide Activity/audit log
 - "Data to review" page flagging incomplete records
 - Analytics dashboard (headcount, tenure, turnover/retention) with company / department / site / role filters and a date-range window; distinct categorical colors on the employment-type chart
+- Printable Workforce Summary report (`/report`) with a reporting-period selector and print-to-PDF CSS, sharing metric helpers with the dashboard
 - Probation reminders (daily Vercel Cron + calendar invite) through a pluggable email layer (ACS / Resend / no-op)
 - **Microsoft Entra ID sign-in** — working in production
 - **Deployment to Vercel** — live
