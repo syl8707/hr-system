@@ -232,12 +232,12 @@ filtered view, and the back button works.
 
 ## 6. Data scripts (run from a terminal)
 
-There are two helper scripts in `scripts/`. **Both write directly to whatever database
-`DATABASE_URL` points at — which is currently production.** Double-check your
-`.env.local`'s `DATABASE_URL` before running either one.
+There are three helper scripts in `scripts/`. **All of them write directly to whatever
+database `DATABASE_URL` points at — which is currently production.** Double-check your
+`.env.local`'s `DATABASE_URL` before running any of them.
 
-Both scripts read `DATABASE_URL` from **`.env.local`** (they load it explicitly), so
-make sure that file has the right connection string.
+All three scripts read `DATABASE_URL` from **`.env.local`** (they load it explicitly),
+so make sure that file has the right connection string.
 
 ### `scripts/load-roster.ts` — load the real roster (DESTRUCTIVE)
 - **What it does:** reads a file named `roster.xlsx` in the project root, validates
@@ -250,6 +250,27 @@ make sure that file has the right connection string.
 - **Run it with:**
   ```bash
   npx tsx scripts/load-roster.ts
+  ```
+
+### `scripts/load-employee-update.ts` — reconcile against an updated roster (SAFE to re-run)
+- **What it does:** reads a file named `Patry_Group_Employees.xlsx` in the project root
+  (its "Current Employees" and "Past Employees" sheets) and reconciles the database
+  against it. Unlike `load-roster.ts`, it **updates existing data instead of wiping
+  it**: it fills in real emails for matched active employees, flips active people who
+  appear on the Past sheet to `TERMINATED` (with their termination date and cause), and
+  creates new `TERMINATED` records for past employees not in the database at all. Every
+  write is stamped in the Activity log as "Employee data update 2026-06".
+- **Dry run by default:** running it plain writes **nothing** — it prints a full
+  reconciliation summary (what would be updated, flipped, created, and which rows it
+  couldn't match) so you can review first. Only the `--commit` flag applies the staged
+  changes, in a single transaction.
+- **Safe to re-run:** it never deletes anything, and re-running after a commit stages 0
+  changes — email updates only stage when the value differs, flips only fire on an
+  `ACTIVE` record, and already-terminated past employees are reported as already loaded.
+- **Run it with:**
+  ```bash
+  npx tsx scripts/load-employee-update.ts            # dry run — writes nothing
+  npx tsx scripts/load-employee-update.ts --commit   # apply the staged changes
   ```
 
 ### `scripts/assign-single-site.ts` — auto-fill missing sites (SAFE to re-run)
@@ -444,7 +465,7 @@ With no provider configured (neither `ACS_CONNECTION_STRING` nor `RESEND_API_KEY
 | **Build fails after a schema change** | The Prisma client is out of date. Run `npx prisma generate`, and make sure the migration was created/applied (`npx prisma migrate dev` locally, `npx prisma migrate deploy` in production). |
 | **Prisma CLI says it can't find the database URL** | The Prisma CLI reads `.env`, not `.env.local`. Set `DATABASE_URL` inline for the command or add a `.env` file — see the gotcha box in [section 7](#7-changing-the-data-model-addingchanging-a-field). |
 | **App can't connect to the database / connection errors** | Check `DATABASE_URL` is correct and is the **pooled** Neon string (host has `-pooler`). Confirm the Neon project is still running (free Neon instances can sleep). |
-| **A data script does nothing / errors out** | Both scripts read `DATABASE_URL` from `.env.local` — make sure it's set there. `assign-single-site.ts` updating 0 rows is normal if sites are already filled. |
+| **A data script does nothing / errors out** | All the data scripts read `DATABASE_URL` from `.env.local` — make sure it's set there. `load-employee-update.ts` is a dry run unless you pass `--commit`. `assign-single-site.ts` updating 0 rows is normal if sites are already filled. |
 | **Vercel deploy shows "Error"** | Open the deployment in Vercel → read the build logs. Most failures are a missing/renamed env var or a schema/migration mismatch. |
 
 ---
