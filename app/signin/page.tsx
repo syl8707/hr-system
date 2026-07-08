@@ -8,10 +8,10 @@ export default function SignInPage() {
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 text-base font-bold text-white">
             HR
           </span>
-          <h1 className="mt-4 text-xl font-semibold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
             Sign in to HR System
           </h1>
-          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-300">
             Use your Microsoft work account to continue.
           </p>
         </div>

@@ -38,11 +38,11 @@ export function ReportControls({
         isPending ? "opacity-70" : ""
       }`}
     >
-      <span className="px-1 text-sm font-medium text-slate-500 dark:text-slate-400">
+      <span className="px-1 text-sm font-medium text-slate-600 dark:text-slate-300">
         Reporting period
       </span>
 
-      <label className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+      <label className="flex items-center gap-1.5 text-sm font-medium text-slate-600 dark:text-slate-300">
         <span className="px-1">Start</span>
         <input
           type="date"
@@ -54,7 +54,7 @@ export function ReportControls({
         />
       </label>
 
-      <label className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+      <label className="flex items-center gap-1.5 text-sm font-medium text-slate-600 dark:text-slate-300">
         <span className="px-1">End</span>
         <input
           type="date"

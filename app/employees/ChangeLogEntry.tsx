@@ -66,7 +66,7 @@ function ChangeSummary({
   changes: unknown;
 }) {
   if (action === ChangeAction.DELETE) {
-    return <p className="text-slate-600 dark:text-slate-300">Employee record deleted.</p>;
+    return <p className="text-slate-700 dark:text-slate-200">Employee record deleted.</p>;
   }
 
   const entries =
@@ -76,10 +76,10 @@ function ChangeSummary({
 
   if (action === ChangeAction.UPDATE) {
     if (entries.length === 0) {
-      return <p className="text-slate-500 dark:text-slate-400">No field changes recorded.</p>;
+      return <p className="text-slate-600 dark:text-slate-300">No field changes recorded.</p>;
     }
     return (
-      <ul className="space-y-0.5 text-slate-600 dark:text-slate-300">
+      <ul className="space-y-0.5 text-slate-700 dark:text-slate-200">
         {entries.map(([field, change]) => {
           const { from, to } = (change ?? {}) as {
             from?: unknown;
@@ -87,10 +87,10 @@ function ChangeSummary({
           };
           return (
             <li key={field}>
-              <span className="font-medium text-slate-700 dark:text-slate-200">
+              <span className="font-medium text-slate-800 dark:text-slate-100">
                 {labelFor(field)}:
               </span>{" "}
-              <span className="text-slate-400 line-through">{display(from)}</span>{" "}
+              <span className="text-slate-500 line-through dark:text-slate-400">{display(from)}</span>{" "}
               <span aria-hidden>→</span> {display(to)}
             </li>
           );
@@ -101,17 +101,17 @@ function ChangeSummary({
 
   // CREATE: list the initial values the record was created with.
   if (entries.length === 0) {
-    return <p className="text-slate-600 dark:text-slate-300">Employee record created.</p>;
+    return <p className="text-slate-700 dark:text-slate-200">Employee record created.</p>;
   }
   return (
     <>
-      <p className="mb-1 text-slate-600 dark:text-slate-300">
+      <p className="mb-1 text-slate-700 dark:text-slate-200">
         Employee record created with:
       </p>
-      <ul className="space-y-0.5 text-slate-600 dark:text-slate-300">
+      <ul className="space-y-0.5 text-slate-700 dark:text-slate-200">
         {entries.map(([field, value]) => (
           <li key={field}>
-            <span className="font-medium text-slate-700 dark:text-slate-200">
+            <span className="font-medium text-slate-800 dark:text-slate-100">
               {labelFor(field)}:
             </span>{" "}
             {display(value)}

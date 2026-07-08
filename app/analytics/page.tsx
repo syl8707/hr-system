@@ -32,7 +32,7 @@ function MetricCard({
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-center gap-2">
         <span className={`h-2 w-2 rounded-full ${accent}`} aria-hidden="true" />
-        <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+        <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
           {label}
         </span>
       </div>
@@ -54,11 +54,11 @@ function ChartCard({
 }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
+      <h2 className="text-base font-semibold text-slate-900 dark:text-white">
         {title}
       </h2>
       {subtitle ? (
-        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+        <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300">
           {subtitle}
         </p>
       ) : null}
@@ -297,10 +297,10 @@ export default async function AnalyticsPage({
     <main className="mx-auto w-full max-w-6xl px-8 py-10">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
             Analytics
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
             Workforce overview{sliceLabel ? ` — ${sliceLabel}` : ""}.
           </p>
         </div>

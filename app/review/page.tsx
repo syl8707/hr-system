@@ -75,10 +75,10 @@ export default async function ReviewPage({
   return (
     <main className="mx-auto w-full max-w-6xl px-8 py-10">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
           Data to review
         </h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
           Employees with missing or placeholder data that still needs to be
           completed.
         </p>
@@ -94,7 +94,7 @@ export default async function ReviewPage({
             <div className="text-2xl font-semibold tabular-nums text-slate-900 dark:text-white">
               {summaryCounts[index].toLocaleString()}
             </div>
-            <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">
               {check.label}
             </div>
           </div>
@@ -109,7 +109,7 @@ export default async function ReviewPage({
       />
 
       {employees.length === 0 ? (
-        <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center text-sm text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+        <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
           {total === 0 && !q && !issue
             ? "Nothing to review — every employee has complete data."
             : "No employees match your filters."}
@@ -118,16 +118,16 @@ export default async function ReviewPage({
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-300">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Employee ID</th>
-                  <th className="px-4 py-3 font-medium">Name</th>
-                  <th className="px-4 py-3 font-medium">Email</th>
-                  <th className="px-4 py-3 font-medium">Department</th>
-                  <th className="px-4 py-3 font-medium">Site</th>
-                  <th className="px-4 py-3 font-medium">Type</th>
-                  <th className="px-4 py-3 font-medium">Hire date</th>
-                  <th className="px-4 py-3 font-medium">Issues</th>
+                  <th className="px-4 py-3 font-semibold">Employee ID</th>
+                  <th className="px-4 py-3 font-semibold">Name</th>
+                  <th className="px-4 py-3 font-semibold">Email</th>
+                  <th className="px-4 py-3 font-semibold">Department</th>
+                  <th className="px-4 py-3 font-semibold">Site</th>
+                  <th className="px-4 py-3 font-semibold">Type</th>
+                  <th className="px-4 py-3 font-semibold">Hire date</th>
+                  <th className="px-4 py-3 font-semibold">Issues</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -136,7 +136,7 @@ export default async function ReviewPage({
                   // Each cell is a block-level link so the whole row is
                   // clickable while staying valid HTML.
                   const cell =
-                    "block px-4 py-3 text-slate-700 dark:text-slate-300";
+                    "block px-4 py-3 text-slate-800 dark:text-slate-200";
                   // The issues this row actually has. When a single issue is
                   // filtered, only that one is relevant; otherwise tag them all.
                   const checks = selectedCheck ? [selectedCheck] : REVIEW_CHECKS;
@@ -163,7 +163,7 @@ export default async function ReviewPage({
                         >
                           {employee.firstName} {employee.lastName}
                           {employee.preferredName ? (
-                            <span className="font-normal text-slate-400">
+                            <span className="font-normal text-slate-500 dark:text-slate-400">
                               {" "}
                               ({employee.preferredName})
                             </span>
@@ -219,7 +219,7 @@ export default async function ReviewPage({
       )}
 
       {total > 0 ? (
-        <div className="mt-4 flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
+        <div className="mt-4 flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
           <span>
             <span className="font-medium text-slate-900 dark:text-white">
               {total.toLocaleString()}

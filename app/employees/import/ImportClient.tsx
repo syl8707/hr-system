@@ -154,7 +154,7 @@ export function ImportClient() {
   if (!parsed) {
     return (
       <div className={`${card} p-6`}>
-        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+        <label className="block text-sm font-medium text-slate-800 dark:text-slate-200">
           Choose a file
           <input
             type="file"
@@ -166,7 +166,7 @@ export function ImportClient() {
             className="mt-2 block w-full text-sm text-slate-600 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-indigo-700 dark:text-slate-400"
           />
         </label>
-        <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
+        <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
           Accepts .xlsx and .csv. The first sheet&rsquo;s header row is used to
           map columns. Need a starting point?{" "}
           <a
@@ -203,8 +203,8 @@ export function ImportClient() {
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
               Map columns
             </h2>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              <span className="font-medium text-slate-700 dark:text-slate-300">
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              <span className="font-medium text-slate-800 dark:text-slate-200">
                 {parsed.name}
               </span>{" "}
               · {parsed.rows.length}{" "}
@@ -221,7 +221,7 @@ export function ImportClient() {
           {EMPLOYEE_COLUMNS.map((field) => (
             <label
               key={field}
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+              className="block text-sm font-medium text-slate-800 dark:text-slate-200"
             >
               {FIELD_LABELS[field]}
               {REQUIRED.has(field) ? (
@@ -255,7 +255,7 @@ export function ImportClient() {
             Preview
           </h2>
           {previewing ? (
-            <span className="text-sm text-slate-400">Validating…</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">Validating…</span>
           ) : null}
         </div>
 
@@ -279,17 +279,17 @@ export function ImportClient() {
 
             {preview.sample.length > 0 ? (
               <div className="mt-5">
-                <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                   Sample of rows to create
                 </h3>
                 <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
                   <table className="w-full border-collapse text-left text-sm">
-                    <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+                    <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-300">
                       <tr>
-                        <th className="px-3 py-2 font-medium">Row</th>
-                        <th className="px-3 py-2 font-medium">Name</th>
-                        <th className="px-3 py-2 font-medium">Email</th>
-                        <th className="px-3 py-2 font-medium">Department</th>
+                        <th className="px-3 py-2 font-semibold">Row</th>
+                        <th className="px-3 py-2 font-semibold">Name</th>
+                        <th className="px-3 py-2 font-semibold">Email</th>
+                        <th className="px-3 py-2 font-semibold">Department</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -301,10 +301,10 @@ export function ImportClient() {
                           <td className="px-3 py-2 text-slate-900 dark:text-white">
                             {row.firstName} {row.lastName}
                           </td>
-                          <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
+                          <td className="px-3 py-2 text-slate-800 dark:text-slate-200">
                             {row.email}
                           </td>
-                          <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
+                          <td className="px-3 py-2 text-slate-800 dark:text-slate-200">
                             {row.department || "—"}
                           </td>
                         </tr>
@@ -332,7 +332,7 @@ export function ImportClient() {
             ) : null}
           </>
         ) : (
-          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
             Validating…
           </p>
         )}
@@ -407,7 +407,7 @@ function IssueList({
       : "text-red-700 dark:text-red-300";
   return (
     <div className="mt-5">
-      <h3 className={`mb-2 text-xs font-medium uppercase tracking-wide ${accent}`}>
+      <h3 className={`mb-2 text-xs font-semibold uppercase tracking-wider ${accent}`}>
         {title}
       </h3>
       <div className="max-h-56 overflow-y-auto rounded-lg border border-slate-200 dark:border-slate-800">
@@ -418,7 +418,7 @@ function IssueList({
                 <td className="w-16 px-3 py-2 align-top tabular-nums text-slate-500 dark:text-slate-400">
                   Row {item.rowNumber}
                 </td>
-                <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
+                <td className="px-3 py-2 text-slate-800 dark:text-slate-200">
                   {item.reason}
                 </td>
               </tr>

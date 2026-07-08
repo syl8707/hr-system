@@ -16,7 +16,7 @@ import { getSiteOptionsFor } from "./siteScope";
 const fieldClass =
   "mt-1.5 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
 const labelClass =
-  "block text-sm font-medium text-slate-700 dark:text-slate-300";
+  "block text-sm font-medium text-slate-800 dark:text-slate-200";
 
 function TextField({
   label,

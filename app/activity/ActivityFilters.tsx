@@ -71,7 +71,7 @@ export function ActivityFilters({ users }: { users: string[] }) {
         ))}
       </select>
 
-      <label className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+      <label className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300">
         From
         <input
           type="date"
@@ -82,7 +82,7 @@ export function ActivityFilters({ users }: { users: string[] }) {
         />
       </label>
 
-      <label className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+      <label className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300">
         To
         <input
           type="date"

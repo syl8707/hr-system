@@ -33,7 +33,7 @@ export async function UserMenu() {
       >
         <button
           type="submit"
-          className="mt-1 w-full rounded-md px-2 py-1.5 text-left text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+          className="mt-1 w-full rounded-md px-2 py-1.5 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
         >
           Sign out
         </button>

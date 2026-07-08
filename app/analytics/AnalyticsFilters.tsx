@@ -52,7 +52,7 @@ export function AnalyticsFilters({
         isPending ? "opacity-70" : ""
       }`}
     >
-      <span className="px-1 text-sm font-medium text-slate-500 dark:text-slate-400">
+      <span className="px-1 text-sm font-medium text-slate-600 dark:text-slate-300">
         Filter
       </span>
 
@@ -115,7 +115,7 @@ export function AnalyticsFilters({
       {/* Date window: every metric reflects employees active at some point in
           [start, end]. Leaving a bound empty lets the server fill it in — a
           missing end means today, a missing start means the earliest hire. */}
-      <label className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+      <label className="flex items-center gap-1.5 text-sm font-medium text-slate-600 dark:text-slate-300">
         <span className="px-1">Start</span>
         <input
           type="date"
@@ -127,7 +127,7 @@ export function AnalyticsFilters({
         />
       </label>
 
-      <label className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+      <label className="flex items-center gap-1.5 text-sm font-medium text-slate-600 dark:text-slate-300">
         <span className="px-1">End</span>
         <input
           type="date"

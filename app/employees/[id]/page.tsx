@@ -78,22 +78,22 @@ export default async function EmployeeDetailPage({
     <main className="mx-auto w-full max-w-3xl px-8 py-10">
       <Link
         href="/employees"
-        className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+        className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
       >
         ← Back to list
       </Link>
       <div className="mt-2 mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
             {employee.firstName} {employee.lastName}
             {employee.preferredName ? (
-              <span className="font-normal text-slate-400">
+              <span className="font-normal text-slate-500 dark:text-slate-400">
                 {" "}
                 ({employee.preferredName})
               </span>
             ) : null}
           </h1>
-          <div className="mt-2 flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
+          <div className="mt-2 flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
             <span className="font-mono text-xs">{employee.employeeId}</span>
             <StatusBadge status={employee.status} />
           </div>
@@ -115,7 +115,7 @@ export default async function EmployeeDetailPage({
             key={field.label}
             className="grid grid-cols-3 gap-4 px-5 py-3.5 text-sm"
           >
-            <dt className="font-medium text-slate-500 dark:text-slate-400">
+            <dt className="font-medium text-slate-600 dark:text-slate-300">
               {field.label}
             </dt>
             <dd className="col-span-2 whitespace-pre-wrap text-slate-800 dark:text-slate-200">

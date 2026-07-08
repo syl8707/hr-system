@@ -137,10 +137,10 @@ export default async function ActivityPage({
   return (
     <main className="mx-auto w-full max-w-4xl px-8 py-10">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
           Activity
         </h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
           Every change recorded across all employees.
         </p>
       </div>
@@ -148,7 +148,7 @@ export default async function ActivityPage({
       <ActivityFilters users={users} />
 
       {logs.length === 0 ? (
-        <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center text-sm text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+        <div className="rounded-xl border border-slate-200 bg-white px-6 py-16 text-center text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
           {total === 0 && !hasFilters
             ? "No activity recorded yet."
             : "No activity matches your filters."}
@@ -164,7 +164,7 @@ export default async function ActivityPage({
               >
                 {employee.firstName} {employee.lastName}
                 {employee.preferredName ? (
-                  <span className="font-normal text-slate-400">
+                  <span className="font-normal text-slate-500 dark:text-slate-400">
                     {" "}
                     ({employee.preferredName})
                   </span>
@@ -172,10 +172,10 @@ export default async function ActivityPage({
               </Link>
             ) : (
               <span>
-                <span className="text-slate-500 dark:text-slate-400">
+                <span className="text-slate-600 dark:text-slate-300">
                   Deleted employee
                 </span>{" "}
-                <span className="font-normal text-slate-400">
+                <span className="font-normal text-slate-500 dark:text-slate-400">
                   ({nameFromChanges(log.changes) ?? log.employeeId})
                 </span>
               </span>
@@ -186,7 +186,7 @@ export default async function ActivityPage({
       )}
 
       {total > 0 ? (
-        <div className="mt-4 flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
+        <div className="mt-4 flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
           <span>
             <span className="font-medium text-slate-900 dark:text-white">
               {total.toLocaleString()}

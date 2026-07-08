@@ -31,11 +31,11 @@ export default async function EditEmployeePage({
     <main className="mx-auto w-full max-w-3xl px-8 py-10">
       <Link
         href={`/employees/${employee.id}`}
-        className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+        className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
       >
         ← Back to detail
       </Link>
-      <h1 className="mt-2 mb-6 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
+      <h1 className="mt-2 mb-6 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
         Edit {employee.firstName} {employee.lastName}
       </h1>
 

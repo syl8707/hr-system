@@ -24,7 +24,7 @@ export function DeleteEmployeeButton({
 
   return (
     <span className="flex items-center gap-2">
-      <span className="text-sm text-slate-600 dark:text-slate-400">
+      <span className="text-sm text-slate-700 dark:text-slate-300">
         Are you sure?
       </span>
       <form action={action}>

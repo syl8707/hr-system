@@ -55,7 +55,7 @@ function MetricCard({
     <div className="break-inside-avoid rounded-xl border border-slate-200 bg-white p-5 shadow-sm print:shadow-none dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-center gap-2">
         <span className={`h-2 w-2 rounded-full ${accent}`} aria-hidden="true" />
-        <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+        <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
           {label}
         </span>
       </div>
@@ -83,11 +83,11 @@ function ChartCard({
         wide ? "lg:col-span-2" : ""
       }`}
     >
-      <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+      <h3 className="text-base font-semibold text-slate-900 dark:text-white">
         {title}
       </h3>
       {subtitle ? (
-        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+        <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300">
           {subtitle}
         </p>
       ) : null}
@@ -105,7 +105,7 @@ function ChartCard({
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+    <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
       {children}
     </h2>
   );
@@ -306,10 +306,10 @@ export default async function ReportPage({
             Generated on {formatLong(now)}
           </p>
         </div>
-        <h1 className="mt-6 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
+        <h1 className="mt-6 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
           Workforce Summary
         </h1>
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
           Reporting period: {rangeLabel}
         </p>
       </header>
@@ -389,10 +389,10 @@ export default async function ReportPage({
 
       {/* Accuracy footnote */}
       <footer className="break-inside-avoid border-t border-slate-200 pt-5 dark:border-slate-800">
-        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+        <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
           About these numbers
         </p>
-        <ul className="mt-1.5 list-disc space-y-1 pl-4 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+        <ul className="mt-1.5 list-disc space-y-1 pl-4 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
           <li>
             Hire and termination dates are historical, so headcount, who was
             employed during the period, and tenure are exact for the selected
