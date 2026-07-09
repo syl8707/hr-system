@@ -78,22 +78,6 @@ export function findCheck(key: string): ReviewCheck | undefined {
   return REVIEW_CHECKS.find((check) => check.key === key);
 }
 
-// Change-log keys for dismissed review issues are namespaced with this prefix
-// (e.g. "review_issue:missing_site") so they can never collide with real
-// Employee field names. Written by dismissReviewIssue (./actions.ts) and
-// recognized by ChangeLogEntry, which renders the check's label.
-export const REVIEW_ISSUE_LOG_PREFIX = "review_issue:";
-
-// Matches employees for whom `check` is an ACTIVE issue: the data fails the
-// check AND a reviewer hasn't dismissed that specific check for them (see the
-// ReviewIssueDismissal model). Dismissed issues stay in the database but drop
-// out of the summary counts and the table.
-export function activeIssueWhere(check: ReviewCheck): Prisma.EmployeeWhereInput {
-  return {
-    AND: [check.where, { reviewDismissals: { none: { checkKey: check.key } } }],
-  };
-}
-
 export type ReviewFilters = {
   q?: string;
   issue?: string;
@@ -120,10 +104,10 @@ export function buildReviewWhere(
 
   const selected = filters.issue ? findCheck(filters.issue) : undefined;
   if (selected) {
-    and.push(activeIssueWhere(selected));
+    and.push(selected.where);
   } else {
-    // Any employee with at least one active (non-dismissed) issue.
-    and.push({ OR: REVIEW_CHECKS.map((check) => activeIssueWhere(check)) });
+    // Any employee with at least one issue.
+    and.push({ OR: REVIEW_CHECKS.map((check) => check.where) });
   }
 
   return and.length === 1 ? and[0] : { AND: and };

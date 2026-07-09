@@ -2,13 +2,11 @@ import Link from "next/link";
 
 import { prisma } from "@/lib/prisma";
 import {
-  activeIssueWhere,
   buildReviewWhere,
   findCheck,
   firstParam,
   REVIEW_CHECKS,
 } from "./query";
-import { DismissableIssues } from "./DismissableIssues";
 import { ReviewFilters } from "./ReviewFilters";
 
 export const dynamic = "force-dynamic";
@@ -39,11 +37,8 @@ export default async function ReviewPage({
 
   // Roster-wide counts for the summary: one count per check, run in parallel.
   // These ignore the search/filter so they always reflect the whole roster.
-  // Only active issues count — dismissed ones are excluded.
   const summaryCounts = await Promise.all(
-    REVIEW_CHECKS.map((check) =>
-      prisma.employee.count({ where: activeIssueWhere(check) }),
-    ),
+    REVIEW_CHECKS.map((check) => prisma.employee.count({ where: check.where })),
   );
 
   // The table's filter (search AND issue), reused for the count and the page.
@@ -58,8 +53,6 @@ export default async function ReviewPage({
     orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     skip: (currentPage - 1) * PAGE_SIZE,
     take: PAGE_SIZE,
-    // Which checks are dismissed per row, so the Issues column can skip them.
-    include: { reviewDismissals: { select: { checkKey: true } } },
   });
 
   const selectedCheck = issue ? findCheck(issue) : undefined;
@@ -145,23 +138,11 @@ export default async function ReviewPage({
                   const cell =
                     "block px-4 py-3 text-slate-800 dark:text-slate-200";
                   // The issues this row actually has. When a single issue is
-                  // filtered, only that one is relevant; otherwise tag them
-                  // all. Dismissed checks are skipped — they're no longer
-                  // active issues for this employee.
-                  const dismissedKeys = new Set(
-                    employee.reviewDismissals.map((d) => d.checkKey),
-                  );
+                  // filtered, only that one is relevant; otherwise tag them all.
                   const checks = selectedCheck ? [selectedCheck] : REVIEW_CHECKS;
-                  const issues = checks
-                    .filter(
-                      (check) =>
-                        check.matches(employee) && !dismissedKeys.has(check.key),
-                    )
-                    .map((check) => ({
-                      key: check.key,
-                      label: check.label,
-                      shortLabel: check.shortLabel,
-                    }));
+                  const issueLabels = checks
+                    .filter((check) => check.matches(employee))
+                    .map((check) => check.shortLabel);
                   return (
                     <tr
                       key={employee.id}
@@ -214,13 +195,19 @@ export default async function ReviewPage({
                           {formatDate(employee.hireDate)}
                         </Link>
                       </td>
-                      {/* Not a link like the other cells: the chips carry
-                          their own Dismiss buttons. */}
                       <td>
-                        <DismissableIssues
-                          employeeId={employee.id}
-                          issues={issues}
-                        />
+                        <Link href={href} className="block px-4 py-3">
+                          <span className="flex flex-wrap gap-1">
+                            {issueLabels.map((label) => (
+                              <span
+                                key={label}
+                                className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
+                              >
+                                {label}
+                              </span>
+                            ))}
+                          </span>
+                        </Link>
                       </td>
                     </tr>
                   );

@@ -37,46 +37,27 @@ enum ChangeAction {
 }
 
 model Employee {
-  id               String                 @id @default(cuid())
-  employeeId       String?                @unique
-  firstName        String
-  lastName         String
-  preferredName    String?
-  email            String?
-  phone            String?
-  company          String?
-  department       String?
-  roleTitle        String?
-  roleFamily       String?
-  site             String?
-  manager          String?
-  employmentType   EmploymentType?
-  payType          PayType?
-  status           EmployeeStatus         @default(ACTIVE)
-  hireDate         DateTime?
-  terminationDate  DateTime?
-  notes            String?
-  createdAt        DateTime               @default(now())
-  updatedAt        DateTime               @updatedAt
-  reviewDismissals ReviewIssueDismissal[]
-}
-
-// A reviewer's decision that a data-completeness issue flagged on the review
-// page is fine as-is for one employee. Soft flag only: a row here hides that
-// one issue from the active review view — the employee record itself is never
-// changed, mirroring how terminated employees are marked rather than deleted.
-// `checkKey` is the `key` of a REVIEW_CHECKS entry in app/review/query.ts.
-// The cascade removes dismissals with their employee; the audit trail lives in
-// EmployeeChangeLog, which each dismissal also writes to.
-model ReviewIssueDismissal {
-  id          String   @id @default(cuid())
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  employeeId  String
-  checkKey    String
-  dismissedBy String?
-  dismissedAt DateTime @default(now())
-
-  @@unique([employeeId, checkKey])
+  id              String          @id @default(cuid())
+  employeeId      String?         @unique
+  firstName       String
+  lastName        String
+  preferredName   String?
+  email           String?
+  phone           String?
+  company         String?
+  department      String?
+  roleTitle       String?
+  roleFamily      String?
+  site            String?
+  manager         String?
+  employmentType  EmploymentType?
+  payType         PayType?
+  status          EmployeeStatus  @default(ACTIVE)
+  hireDate        DateTime?
+  terminationDate DateTime?
+  notes           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 }
 
 // Append-only audit trail of every create/update/delete on an Employee.
