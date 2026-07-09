@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import type { EmployeeChangeLog } from "@/app/generated/prisma/client";
 import { ChangeAction } from "@/app/generated/prisma/enums";
+import { findCheck, REVIEW_ISSUE_LOG_PREFIX } from "@/app/review/query";
 
 const DATE_TIME_FORMAT = new Intl.DateTimeFormat("en-US", {
   month: "short",
@@ -33,6 +34,12 @@ const FIELD_LABELS: Record<string, string> = {
 };
 
 function labelFor(field: string): string {
+  // Dismissed review issues are logged under a namespaced key
+  // ("review_issue:<check key>"); render them with the check's label.
+  if (field.startsWith(REVIEW_ISSUE_LOG_PREFIX)) {
+    const key = field.slice(REVIEW_ISSUE_LOG_PREFIX.length);
+    return `Review issue · ${findCheck(key)?.label ?? key}`;
+  }
   return FIELD_LABELS[field] ?? field;
 }
 

@@ -10,5 +10,9 @@ export default defineConfig({
   },
   datasource: {
     url: process.env["DATABASE_URL"],
+    // Optional override for `prisma migrate dev` against local scratch
+    // databases (e.g. `npx prisma dev`) that can't auto-create a shadow
+    // database. Unset in normal use.
+    shadowDatabaseUrl: process.env["SHADOW_DATABASE_URL"],
   },
 });
