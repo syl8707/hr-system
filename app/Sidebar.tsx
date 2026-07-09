@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -76,8 +77,16 @@ export function Sidebar({ footer }: { footer?: React.ReactNode }) {
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-center gap-2.5 px-5 py-5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
-          HR
+        {/* Dark artwork on transparent background: the light chip is needed in
+            dark mode only, until we get a light version of the logo. */}
+        <span className="flex h-8 items-center justify-center dark:rounded-lg dark:bg-white/90 dark:p-1">
+          <Image
+            src="/patry-dark-clear-logo.png"
+            alt="Patry"
+            width={320}
+            height={243}
+            className="h-6 w-auto"
+          />
         </span>
         <span className="text-base font-semibold tracking-tight text-slate-900 dark:text-white">
           HR System

@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { signIn } from "@/auth";
 
 export default function SignInPage() {
@@ -5,8 +7,16 @@ export default function SignInPage() {
     <main className="flex min-h-screen items-center justify-center px-6 py-12">
       <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="flex flex-col items-center text-center">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 text-base font-bold text-white">
-            HR
+          {/* Dark artwork on transparent background: the light chip is needed
+              in dark mode only, until we get a light version of the logo. */}
+          <span className="flex h-11 items-center justify-center dark:rounded-xl dark:bg-white/90 dark:p-1.5">
+            <Image
+              src="/patry-dark-clear-logo.png"
+              alt="Patry"
+              width={320}
+              height={243}
+              className="h-8 w-auto"
+            />
           </span>
           <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
             Sign in to HR System

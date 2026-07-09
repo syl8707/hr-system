@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/app/generated/prisma/client";
 import { EmployeeStatus } from "@/app/generated/prisma/enums";
@@ -295,8 +296,17 @@ export default async function ReportPage({
       <header className="mb-10 border-b border-slate-200 pb-8 dark:border-slate-800">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
-              HR
+            {/* Dark artwork on transparent background: the light chip is
+                needed in dark mode only, until we get a light version of the
+                logo. */}
+            <span className="flex h-8 items-center justify-center dark:rounded-lg dark:bg-white/90 dark:p-1">
+              <Image
+                src="/patry-dark-clear-logo.png"
+                alt="Patry"
+                width={320}
+                height={243}
+                className="h-6 w-auto"
+              />
             </span>
             <span className="text-base font-semibold tracking-tight text-slate-900 dark:text-white">
               {COMPANY_NAME}
